@@ -3,18 +3,19 @@
 ;Colors are from mode 13h VGA color palette
 ;DL/DX are affected by mul & div!
 ;byte ptr to indicate byte-sized operand
+;Procs are grouped to sections
 .model small
 .stack 100h
 .data
 
-sprite STRUC
+enemy STRUC
+    ;Must stay 8 bytes long
     x dw ?
     y db ?
-    ;For enemy sprites
     spawnCounter dw 0
     moveCounter db 0
     shootCounter dw 0
-sprite ENDS
+enemy ENDS
 
 shots STRUC
     xArr dw 5 dup(0)
@@ -57,7 +58,7 @@ playerHP dw 3
 playerScore dw 0       ;Max 2559 (drawScore limit)
 
 ;Player shots variables
-playerShots shots {max=6}
+playerShots shots {max=2}
 playerShotWidth equ 10
 playerShotHeight equ 2 ;Do NOT change!
 playerShotFrontColor equ 34h
@@ -71,7 +72,7 @@ enemyShootRate equ 300 ;300f/120fps = 2.5secs
 enemyShotWidth equ 10
 enemyShotHeight equ 2  ;Max = max(enemyHeights)
 numOfEnemies equ 2
-allEnemies dq 2 dup(sprite) ;Blue, yellow
+allEnemies dq 2 dup(enemy) ;Blue, yellow
 currentEnemy dw 0 ;0=blue, 1=yellow
 
 ;Blue enemy variables
@@ -717,7 +718,7 @@ handleGameInput ENDP
 delay PROC
     ;Delay 8.334 ms between each frame = 120hz
     mov cx, 0h
-    mov dx, 208Eh ;(8334 microseconds)
+    mov dx, 8334 ;Microseconds 8334
     mov ah, 86h
     int 15h
     RET
