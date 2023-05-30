@@ -17,10 +17,12 @@ enemy STRUC
     shootCounter dw 0
 enemy ENDS
 
+realMaxShots equ 5
+
 shots STRUC
-    xArr dw 5 dup(0)
-    yArr dw 5 dup(0)
-    max dw ?        ;Actual max = max/2, shots are arrays
+    xArr dw realMaxShots dup(0)
+    yArr dw realMaxShots dup(0)
+    max dw ?        ;Actual current max = max/2, shots are arrays
     trailColors db 3 dup(?)
 shots ENDS
 
@@ -58,7 +60,7 @@ playerHP dw 3
 playerScore dw 0       ;Max 2559 (drawScore limit)
 
 ;Player shots variables
-playerShots shots {max=2}
+playerShots shots {max=2} ;Upgradable
 playerShotWidth equ 10
 playerShotHeight equ 2 ;Do NOT change!
 playerShotFrontColor equ 34h
@@ -90,6 +92,9 @@ yellowEnemyColor equ 9
 yellowEnemyShots shots {max=4}
 yellowEnemyShotFrontColor equ 2Ch ;Can join to 1 array
 yellowEnemyShotTrailColors db 2Bh, 2Ah, 29h
+
+;Shop variables
+shotPrices db 10, 15, 25, 50
 
 .code
 
@@ -629,6 +634,7 @@ welcomeScreenName ENDP
 
 initializeGame PROC
     call initPlayer
+    call initShop
     call initAllShots
     call drawBorder
     call drawStars
@@ -708,6 +714,7 @@ handleGameInput PROC
         call killEnemy
         jmp handleGameInputEnd
     devCheat4:
+        call buyShots
         jmp handleGameInputEnd
     
     handleGameInputEnd:
@@ -1525,6 +1532,7 @@ initPlayerShot PROC
     
     checkPlayerShots:
         mov ax, playerShots.max
+        shl ax, 1 ;Multiple by 2 cuz referencing a dw array
         dec ax ;Can't do in 1 line
         cmp bx, ax ;No shots available
         ja initPlayerShotEnd
@@ -1610,7 +1618,8 @@ movePlayerShots PROC
     handlePlayerShots:
         add bx, 2
         mov ax, playerShots.max
-            dec ax ;Can't do in 1 line
+        shl ax, 1 ;Multiple by 2 cuz referencing a dw array
+        dec ax ;Can't do in 1 line
         
         cmp bx, ax
         ja movePlayerShotsEnd ;No shots are available
@@ -3240,6 +3249,31 @@ printDeathScreen ENDP
 ;--------------------------------------------------SHOP---------------------------------------------------------------------------------------------------------------------------------
 
 
+initShop PROC
+    ;Shop border
+    mov dl, borderColor
+    mov di, windowWidth*189 + 80
+    mov cx, 10
+    call verticalLine
+    mov di, windowWidth*189 + 240
+    mov cx, 10
+    call verticalLine
+    mov di, windowWidth*189 + 81
+    mov cx, 159
+    call horizontalLine
+
+    mov di, windowWidth*191 + 120
+    call drawPlus
+
+    mov playerShots.xArr[0], 130
+    mov playerShots.yArr[0], 194
+    mov bx, 0
+    call drawPlayerShot
+
+    RET
+initShop ENDP
+
+
 drawPlus PROC
     push cx
     push dx
@@ -3258,6 +3292,34 @@ drawPlus PROC
 drawPlus ENDP
 
 
+buyShots PROC
+    push ax
+    push bx
+    
+    mov bx, playerShots.max
+    
+    ;Can extend max shots?
+    cmp bx, realMaxShots
+    jge buyShotsEnd
+
+    ;Move to AX
+    mov ah, 0
+    mov al, shotPrices[bx - 1] ;1 is initial real max
+    cmp playerScore, ax
+    jl buyShotsEnd
+
+    ;Buy new shot
+    sub playerScore, ax
+    call drawScore
+    inc playerShots.max
+    
+    buyShotsEnd:
+    pop bx
+    pop ax
+    RET
+buyShots ENDP
+
+
 ;----------------------------------------------------------------------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------
 ;----------------------------------------------------------------------------------------------------------------------------
@@ -3271,8 +3333,6 @@ main:
     call welcomeScreen
     call initializeGame
 
-    mov di, windowWidth*2 + 10
-    call drawPlus
     ;Each iteration is a frame
     game:
         call delay
