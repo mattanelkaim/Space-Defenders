@@ -29,6 +29,10 @@ shots ENDS
 ;Window variables
 windowHeight equ 200
 windowWidth equ 320
+delayTime dw 8334   ;Microsonds
+accelerationCounter dw 0
+accelerationRate equ 600 ;600f/120fps = 5secs
+minDelay equ 4167
 
 ;Border & bg variables
 drawOrErase db 0
@@ -45,7 +49,7 @@ starsPositions dw 970,   1811,  1856,  2459,  2864,  3447,  3459,  3692,  4770, 
                dw 39496, 40473, 40758, 40853, 40982, 42045, 42685, 44010, 44509, 45073
                dw 45347, 45512, 46469, 47674, 47945, 48779, 49515, 49699, 51889, 51958
                dw 52456, 54510, 54517, 55100, 55453, 55810, 56660, 56879, 57702, 57780
-               dw 57817, 57944, 58068, 58073, 59952, 60521, 61607, 62282, 63088, 63348
+               dw 57817, 57944, 58068, 58073, 59952, 60521, 61700, 62686, 63088, 63348
 
 ;Player variables
 playerX equ 20
@@ -60,7 +64,7 @@ playerHP dw 3
 playerScore dw 0       ;Max 2559 (drawScore limit)
 
 ;Player shots variables
-playerShots shots {max=2} ;Upgradable
+playerShots shots {max=1} ;Upgradable
 playerShotWidth equ 10
 playerShotHeight equ 2 ;Do NOT change!
 playerShotFrontColor equ 34h
@@ -94,7 +98,7 @@ yellowEnemyShotFrontColor equ 2Ch ;Can join to 1 array
 yellowEnemyShotTrailColors db 2Bh, 2Ah, 29h
 
 ;Shop variables
-shotPrices db 10, 15, 25, 50
+shotPrices db 10, 15, 20, 25
 
 .code
 
@@ -724,12 +728,32 @@ handleGameInput ENDP
 
 delay PROC
     ;Delay 8.334 ms between each frame = 120hz
-    mov cx, 0h
-    mov dx, 8334 ;Microseconds 8334
+    mov cx, 0
+    mov dx, delayTime
     mov ah, 86h
     int 15h
     RET
 delay ENDP
+
+
+accelerateGame PROC
+    cmp delayTime, minDelay
+    jbe accelerateGameEnd
+
+    cmp accelerationCounter, accelerationRate
+    jge validToAccelerate
+
+    ;Not valid to accelerate
+    inc accelerationCounter
+    jmp accelerateGameEnd
+    
+    validToAccelerate:
+        mov accelerationCounter, 0
+        sub delayTime, 150
+
+    accelerateGameEnd:
+    RET
+accelerateGame ENDP
 
 
 initPlayer PROC
@@ -1701,11 +1725,20 @@ playerShotCollisions PROC
     
     playerShotCollisionEnemy:
     call killEnemy
+
     ;Update score
-    add playerScore, 2
-    call drawScore
-    mov drawOrErase, 0
-    call drawPlayerShot
+    cmp currentEnemy, 1
+    je killedBlue
+
+    ;Each enemy gives different score
+    add playerScore, 5
+    jmp updateScore
+    killedBlue:
+        add playerScore, 3
+    updateScore:
+        call drawScore
+        mov drawOrErase, 0
+        call drawPlayerShot
     
     detectedPlayerShotCollision:
         mov dh, 1  ;Collision true
@@ -2423,7 +2456,7 @@ spawnEnemy PROC
     jge validToSpawnEnemy
 
     ;Not valid to spawn enemy
-    add allEnemies[bx].spawnCounter, 1
+    inc allEnemies[bx].spawnCounter
     jmp spawnEnemyEnd
     
     validToSpawnEnemy:
@@ -3336,7 +3369,8 @@ main:
     ;Each iteration is a frame
     game:
         call delay
-        
+        call accelerateGame
+
         call checkPlayerCollisions
         call movePlayerShots
         call handleEnemies
