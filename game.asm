@@ -2,6 +2,8 @@
 ;Anchor tile is at top-left (0,0)
 ;Colors are from mode 13h VGA color palette
 ;DL/DX are affected by mul & div!
+;XOR x, x resets x
+;TEST = AND without storing, like cmp & sub. TEST AL, 0FFh == cmp AL, 0
 ;byte ptr to indicate byte-sized operand
 ;Procs are grouped to sections
 
@@ -79,7 +81,7 @@ enemyShootRate equ 300 ;300f/120fps = 2.5secs
 enemyShotWidth equ 10
 enemyShotHeight equ 2  ;Max = max(enemyHeights)
 numOfEnemies equ 2
-allEnemies dq 2 dup(enemy) ;Blue, yellow
+allEnemies dq numOfEnemies dup(enemy) ;Blue, yellow
 currentEnemy dw 0 ;0=blue, 1=yellow
 
 ;Blue enemy variables
@@ -386,7 +388,7 @@ getPowerOf10 PROC
         mov cx, ax
         
         ;Move last quotient to AX
-        mov ah, 0
+        xor ah, ah
         mov al, bh
         cmp bh, 10
         jae getPowerOf10Loop
@@ -404,7 +406,7 @@ drawScore PROC
     cmp playerScore, 2559
     jbe drawValidScore
     
-    ;Reset score, its invalid
+    ;Reset score, it's invalid
     mov playerScore, 0
     
     drawValidScore:
@@ -414,22 +416,23 @@ drawScore PROC
     mov bl, 10     ;Const of divisor
     mov di, 794    ;Position of score
     drawScoreLoop:
-        mov dx, 0  ;Divs change dx, necessary
+        xor dx, dx ;Divs change dx, necessary
         div cx     ;AX = quotient, DX = remainder
         
         ;Digit is in AL
-        mov ah, 0
+        xor ah, ah
         call drawDigit
         add di, 7
         
         ;Divisor CX /= 10
         mov ax, cx
         div bl
-        mov ch, 0
+        xor ch, ch
+        
         mov cl, al
         
         mov ax, dx ;Save remainder for next iteration
-        cmp cx, 0  ;Check divisor
+        test cx, 0FFFFh  ;Check divisor
         jne drawScoreLoop
     
     pop di dx cx bx ax
@@ -475,7 +478,7 @@ getPosition ENDP
 randomize PROC
     ;Randomizes between range in BL(min) -> BH(max)
     ;Returns number in DX
-    mov ah, 0
+    xor ah, ah
     int 1Ah    ;Randomize number (up to 65355) to CX:DX
     
     ;Calc modulu divider: max - min + 1
@@ -483,15 +486,15 @@ randomize PROC
     inc bh
 
     ;Move minimum to CX
-    mov ch, 0
+    xor ch, ch
     mov cl, bl ;Store minimum
 
     ;Move BH to BX
     mov bl, bh
-    mov bh, 0
+    xor bh, bh
 
     mov ax, dx ;DX holds randomized num
-    mov dx, 0  ;Reset for div instruction
+    xor dx, dx  ;Reset for div instruction
     div bx     ;Modulu to get remainder (in DX)
 
     add dx, cx ;Add minimum, now stores final randomized
@@ -518,7 +521,7 @@ welcomeScreen PROC
     call drawPlayer
     mov playerShots.xArr[0], 65
     mov playerShots.yArr[0], 148
-    mov bx, 0
+    xor bx, bx
     call drawPlayerShot
     mov playerShots.xArr[1], 115
     mov playerShots.yArr[1], 151
@@ -535,7 +538,7 @@ welcomeScreen PROC
     call drawBlueEnemy
     mov blueEnemyShots.xArr[0], 200
     mov blueEnemyShots.yArr[0], 40
-    mov si, 0
+    xor si, si
     call drawBlueEnemyShot
     mov blueEnemyShots.xArr[1], 100
     mov blueEnemyShots.yArr[1], 42
@@ -548,7 +551,7 @@ welcomeScreen PROC
     call drawYellowEnemy
     mov yellowEnemyShots.xArr[0], 175
     mov yellowEnemyShots.yArr[0], 148
-    mov si, 0
+    xor si, si
     call drawYellowEnemyShot
 
     call welcomeScreenName
@@ -630,7 +633,7 @@ initializeGame PROC
     call drawPlayerHP
     call drawCoin
     call drawScore
-    mov bx, 0
+    xor bx, bx
     call killEnemy
     mov bx, 1
     call killEnemy
@@ -713,7 +716,7 @@ handleGameInput ENDP
 
 delay PROC
     ;Delay 8.334 ms between each frame = 120hz
-    mov cx, 0
+    xor cx, cx
     mov dx, delayTime
     mov ah, 86h
     int 15h
@@ -796,7 +799,7 @@ initEnemy ENDP
 cls PROC
     push cx di
 
-    mov di, 0
+    xor di, di
     mov cx, windowWidth*windowHeight
     clsLoop:
         inc di
@@ -836,11 +839,11 @@ drawBorder PROC
     push cx dx di
     mov dl, borderColor
 
-    mov di, 0
+    xor di, di
     mov cx, windowWidth
     call horizontalLine ;Top
     
-    mov di, 0
+    xor di, di
     mov cx, windowHeight
     call verticalLine   ;Left
     
@@ -944,8 +947,8 @@ drawHeart PROC
     push cx dx di
     
     mov dl, 4       ;Dark red
-    cmp drawOrErase, 1
-    je drawHeartOuter
+    test drawOrErase, 0FFh
+    jne drawHeartOuter
     mov dl, bgColor ;Erase
     
     drawHeartOuter:
@@ -987,8 +990,8 @@ drawHeart PROC
         loop outerHeartLoop2
     
     mov dl, 28h     ;Light red
-    cmp drawOrErase, 1
-    je drawHeartInner
+    test drawOrErase, 0FFh
+    jne drawHeartInner
     mov dl, bgColor ;Erase
     
     drawHeartInner:
@@ -1058,8 +1061,8 @@ drawPlayer PROC
     mov bx, di ;Save anchor point
     
     mov dl, playerColors[0] ;Dark grey
-    cmp drawOrErase, 1
-    je drawPlayerDarkGrey
+    test drawOrErase, 0FFh
+    jne drawPlayerDarkGrey
     mov dl, bgColor ;Erase
     
     drawPlayerDarkGrey:
@@ -1120,8 +1123,8 @@ drawPlayer PROC
         loop drawCockpit
     
     mov dl, 13h     ;Darker grey
-    cmp drawOrErase, 1
-    je drawPlayerDarkerGrey
+    test drawOrErase, 0FFh
+    jne drawPlayerDarkerGrey
     mov dl, bgColor ;Erase
     
     drawPlayerDarkerGrey:
@@ -1148,8 +1151,8 @@ drawPlayer PROC
     
     
     mov dl, 0Ch ;Red
-    cmp drawOrErase, 1
-    je drawPlayerRed
+    test drawOrErase, 0FFh
+    jne drawPlayerRed
     mov dl, bgColor ;Erase
     
     drawPlayerRed:
@@ -1171,8 +1174,8 @@ drawPlayer PROC
     
     
     mov dl, 0Eh     ;Yellow
-    cmp drawOrErase, 1
-    je drawPlayerYellow
+    test drawOrErase, 0FFh
+    jne drawPlayerYellow
     mov dl, bgColor ;Erase
     
     drawPlayerYellow:
@@ -1202,8 +1205,8 @@ drawPlayer PROC
     
     
     mov dl, 36h     ;Blue
-    cmp drawOrErase, 1
-    je drawPlayerBlue
+    test drawOrErase, 0FFh
+    jne drawPlayerBlue
     mov dl, bgColor ;Erase
     
     drawPlayerBlue:
@@ -1226,8 +1229,8 @@ drawPlayer PROC
     
     
     mov dl, playerColors[1] ;Grey
-    cmp drawOrErase, 1
-    je drawPlayerGrey
+    test drawOrErase, 0FFh
+    jne drawPlayerGrey
     mov dl, bgColor ;Erase
     
     drawPlayerGrey:
@@ -1436,7 +1439,7 @@ checkPlayerCollisions ENDP
 ;Return boolean isCollided in DH
 handlePlayerCollisions PROC
     ;DI is parameter = position to handle
-    mov dh, 0 ;Assume not collided
+    xor dh, dh ;Assume not collided
     
     ;Check for enemy collision
     cmp byte ptr es:[di], blueEnemyColor
@@ -1449,7 +1452,7 @@ handlePlayerCollisions PROC
     ;Enemy collision:
     ;Reset blue enemy
     playerCollisionBlueEnemy:
-        mov bx, 0
+        xor bx, bx
         jmp playerCollisionEnemy
     playerCollisionYellowEnemy:
         mov bx, 1
@@ -1499,7 +1502,7 @@ decPlayerHP ENDP
 
 initPlayerShot PROC
     ;Determine which shot to work on
-    mov bx, 0 ;Holds current shot
+    xor bx, bx ;Holds current shot
     
     checkPlayerShots:
         mov ax, playerShots.max
@@ -1508,7 +1511,7 @@ initPlayerShot PROC
         cmp bx, ax ;No shots available
         ja initPlayerShotEnd
         
-        cmp playerShots.xArr[bx], 0
+        test playerShots.xArr[bx], 0FFFFh
         je setPlayerShot ;Shot NOT initialized
         
         add bx, 2
@@ -1541,7 +1544,7 @@ drawPlayerShot PROC
     mov cx, 3 ;Num of trail colors
     playerShotsTrails:
         mov dl, [bx]
-        cmp drawOrErase, 0
+        test drawOrErase, 0FFh
         jne drawPlayerShotTrail
         mov dl, bgColor
         drawPlayerShotTrail:
@@ -1558,7 +1561,7 @@ drawPlayerShot PROC
 
     ;Draw front part of shot
     mov dl, playerShotFrontColor
-    cmp drawOrErase, 0
+    test drawOrErase, 0FFh
     jne drawPlayerShotFront
     mov dl, bgColor
 
@@ -1589,7 +1592,7 @@ movePlayerShots PROC
         cmp bx, ax
         ja movePlayerShotsEnd ;No shots are available
         
-        cmp playerShots.xArr[bx], 0
+        test playerShots.xArr[bx], 0FFFFh
         jne moveCurrentPlayerShot ;Shot initialized
         
         jmp handlePlayerShots ;Shot NOT initialized
@@ -1603,7 +1606,7 @@ movePlayerShots PROC
         
         ;Check collisions
         call playerShotCollisions
-        cmp dh, 0 ;Return is boolean
+        test dh, 0FFh ;Return is boolean
         je movePlayerShotsDraw ;No collision detected
         
         ;DH is 1, collosion detected: reset shot
@@ -1626,7 +1629,7 @@ movePlayerShots ENDP
 playerShotCollisions PROC
     push bx cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, playerShots.xArr[bx]
@@ -1657,7 +1660,7 @@ playerShotCollisions PROC
     jmp playerShotCollisionsEnd ;No collisions
     
     playerShotCollisionBlueEnemy:
-        mov bx, 0
+        xor bx, bx
         jmp playerShotCollisionEnemy
     playerShotCollisionYellowEnemy:
         mov bx, 1
@@ -1712,15 +1715,15 @@ drawBlueEnemy PROC
     
     mov cx, allEnemies[0].x
     ;Move to DX
-    mov dh, 0
+    xor dh, dh
     mov dl, allEnemies[0].y
     call getPosition
     mov bx, di ;Save anchor point
     
     
     mov dl, blueEnemyColor ;Lilac
-    cmp drawOrErase, 1
-    je drawBlueEnemyLightGrey
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyLightGrey
     mov dl, bgColor ;Erase
     
     drawBlueEnemyLightGrey:
@@ -1790,8 +1793,8 @@ drawBlueEnemy PROC
     call verticalLine
     
     mov dl, 15h     ;Dark grey
-    cmp drawOrErase, 1
-    je drawBlueEnemyDarkGrey
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyDarkGrey
     mov dl, bgColor ;Erase
     
     drawBlueEnemyDarkGrey:
@@ -1845,8 +1848,8 @@ drawBlueEnemy PROC
     call verticalLine
     
     mov dl, 0Eh     ;Yellow
-    cmp drawOrErase, 1
-    je drawBlueEnemyYellow
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyYellow
     mov dl, bgColor ;Erase
     
     drawBlueEnemyYellow:
@@ -1864,8 +1867,8 @@ drawBlueEnemy PROC
     
     
     mov dl, 36h     ;Blue
-    cmp drawOrErase, 1
-    je drawBlueEnemyBlue
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyBlue
     mov dl, bgColor ;Erase
     
     drawBlueEnemyBlue:
@@ -1927,8 +1930,8 @@ drawBlueEnemy PROC
     
     
     mov dl, 0Fh     ;White
-    cmp drawOrErase, 1
-    je drawBlueEnemyWhite
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyWhite
     mov dl, bgColor ;Erase
     
     drawBlueEnemyWhite:
@@ -1964,8 +1967,8 @@ drawBlueEnemy PROC
     
     
     mov dl, 14h     ;Darker grey
-    cmp drawOrErase, 1
-    je drawBlueEnemyDarkerGrey
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyDarkerGrey
     mov dl, bgColor ;Erase
     
     drawBlueEnemyDarkerGrey:
@@ -1979,8 +1982,8 @@ drawBlueEnemy PROC
     
     
     mov dl, blueEnemyColor ;Lilac
-    cmp drawOrErase, 1
-    je drawBlueEnemyDarkPurple
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyDarkPurple
     mov dl, bgColor ;Erase
     
     drawBlueEnemyDarkPurple:
@@ -2000,8 +2003,8 @@ drawBlueEnemy PROC
     
     
     mov dl, blueEnemyColor ;Lilac
-    cmp drawOrErase, 1
-    je drawBlueEnemyLightPurple
+    test drawOrErase, 0FFh
+    jne drawBlueEnemyLightPurple
     mov dl, bgColor ;Erase
     
     drawBlueEnemyLightPurple:
@@ -2048,14 +2051,14 @@ drawYellowEnemy PROC
     
     mov cx, allEnemies[1].x
     ;Move to DX
-    mov dh, 0
+    xor dh, dh
     mov dl, allEnemies[1].y
     call getPosition
     mov bx, di ;Save anchor point
 
     mov dl, yellowEnemyColor
-    cmp drawOrErase, 1
-    je drawYellowEnemyOuter
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyOuter
     mov dl, bgColor ;Erase
     
     drawYellowEnemyOuter:
@@ -2167,8 +2170,8 @@ drawYellowEnemy PROC
     mov es:[di], dl
 
     mov dl, 15h
-    cmp drawOrErase, 1
-    je drawYellowEnemyInner
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyInner
     mov dl, bgColor ;Erase
 
     drawYellowEnemyInner:
@@ -2225,8 +2228,8 @@ drawYellowEnemy PROC
     call verticalLine
 
     mov dl, 2Ch
-    cmp drawOrErase, 1
-    je drawYellowEnemyAlien
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyAlien
     mov dl, bgColor ;Erase
 
     drawYellowEnemyAlien:
@@ -2284,8 +2287,8 @@ drawYellowEnemy PROC
     call verticalLine
     
     mov dl, 0Fh
-    cmp drawOrErase, 1
-    je drawYellowEnemyEyes
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyEyes
     mov dl, bgColor ;Erase
 
     drawYellowEnemyEyes:
@@ -2316,8 +2319,8 @@ drawYellowEnemy PROC
         loop yellowEnemyEyesLoop
     
     mov dl, 14h
-    cmp drawOrErase, 1
-    je drawYellowEnemyPupils
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyPupils
     mov dl, bgColor ;Erase
 
     drawYellowEnemyPupils:
@@ -2334,10 +2337,10 @@ drawYellowEnemy PROC
     add di, windowWidth - 2
     mov cx, 3
     call horizontalLine
-
+    
     mov dl, 0Ch
-    cmp drawOrErase, 1
-    je drawYellowEnemyLights
+    test drawOrErase, 0FFh
+    jne drawYellowEnemyLights
     mov dl, bgColor ;Erase
     
     drawYellowEnemyLights:
@@ -2380,7 +2383,7 @@ drawCurrentEnemy ENDP
 
 spawnEnemy PROC
     ;Current enemy index in BX
-    cmp allEnemies[bx].x, 0
+    test allEnemies[bx].x, 0FFFFh
     jne spawnEnemyEnd
     
     cmp allEnemies[bx].spawnCounter, enemySpawnRate
@@ -2409,7 +2412,7 @@ moveEnemy PROC
     
     validToMoveEnemy:
     mov allEnemies[bx].moveCounter, 0
-    cmp allEnemies[bx].x, 0
+    test allEnemies[bx].x, 0FFFFh
     je moveEnemyEnd ;Not initialized
     
     ;Erase previous drawing
@@ -2460,7 +2463,7 @@ killEnemy ENDP
 
 fireEnemyShot PROC
     ;BX holds current enemy index
-    cmp allEnemies[bx].x, 0
+    test allEnemies[bx].x, 0FFFFh
     je fireEnemyShotEnd
     
     cmp allEnemies[bx].shootCounter, enemyShootRate
@@ -2498,14 +2501,14 @@ fireEnemyShot ENDP
 initBlueEnemyShot PROC
     push si
     ;Determine which shot to work on
-    mov si, 0 ;Current shot
+    xor si, si ;Current shot
     mov ax, blueEnemyShots.max
     dec ax ;Can't do in 1 line
     checkBlueEnemyShots:
         cmp si, ax ;No shots available
         ja initBlueEnemyShotEnd
         
-        cmp blueEnemyShots.xArr[si], 0
+        test blueEnemyShots.xArr[si], 0FFFFh
         je setBlueEnemyShot ;Shot NOT initialized
         
         add si, 2
@@ -2514,7 +2517,7 @@ initBlueEnemyShot PROC
     setBlueEnemyShot:
     mov ax, (blueEnemyHeight - enemyShotHeight) / 2
     ;Move to CX
-    mov ch, 0
+    xor ch, ch
     mov cl, allEnemies[0].y
     add ax, cx
 
@@ -2544,7 +2547,7 @@ drawBlueEnemyShot PROC
 
     ;Draw main part of shot
     mov dl, blueEnemyShotFrontColor
-    cmp drawOrErase, 0
+    test drawOrErase, 0FFh
     jne drawBlueEnemyShotMain
     mov dl, bgColor
     
@@ -2564,7 +2567,7 @@ drawBlueEnemyShot PROC
     mov cx, 3 ;Num of trail colors
     blueEnemyShotsTrails:
         mov dl, [bx]
-        cmp drawOrErase, 0
+        test drawOrErase, 0FFh
         jne drawBlueEnemyShotTrail
         mov dl, bgColor
         drawBlueEnemyShotTrail:
@@ -2596,7 +2599,7 @@ moveBlueEnemyShots PROC
         cmp si, ax
         ja moveBlueEnemyShotsEnd ;No shots are available
         
-        cmp blueEnemyShots.xArr[si], 0
+        test blueEnemyShots.xArr[si], 0FFFFh
         jne moveCurrentBlueEnemyShot ;Shot initialized
         
         jmp handleBlueEnemyShots ;Shot NOT initialized
@@ -2610,7 +2613,7 @@ moveBlueEnemyShots PROC
         
         ;Check collisions
         call blueEnemyShotCollisions
-        cmp dh, 0 ;Return is boolean
+        test dh, 0FFh ;Return is boolean
         je moveBlueEnemyShotsDraw ;No collision detected
         
         ;DH is 1, collosion detected: reset shot
@@ -2634,7 +2637,7 @@ moveBlueEnemyShots ENDP
 blueEnemyShotCollisions PROC
     push cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, blueEnemyShots.xArr[si]
@@ -2687,14 +2690,14 @@ blueEnemyShotCollisions ENDP
 initYellowEnemyShot PROC
     push si
     ;Determine which shot to work on
-    mov si, 0 ;Current shot
+    xor si, si ;Current shot
     mov ax, yellowEnemyShots.max
     dec ax ;Can't do in 1 line
     checkYellowEnemyShots:
         cmp si, ax ;No shots available
         ja initYellowEnemyShotEnd
         
-        cmp yellowEnemyShots.xArr[si], 0
+        test yellowEnemyShots.xArr[si], 0FFFFh
         je setYellowEnemyShot ;Shot NOT initialized
         
         add si, 2
@@ -2703,7 +2706,7 @@ initYellowEnemyShot PROC
     setYellowEnemyShot:
     mov ax, (yellowEnemyHeight - enemyShotHeight) / 2
     ;Move to CX
-    mov ch, 0
+    xor ch, ch
     mov cl, allEnemies[1].y
     add ax, cx
 
@@ -2733,7 +2736,7 @@ drawYellowEnemyShot PROC
 
     ;Draw main part of shot
     mov dl, yellowEnemyShotFrontColor
-    cmp drawOrErase, 0
+    test drawOrErase, 0FFh
     jne drawYellowEnemyShotMain
     mov dl, bgColor
     
@@ -2753,7 +2756,7 @@ drawYellowEnemyShot PROC
     mov cx, 3 ;Num of trail colors
     yellowEnemyShotsTrails:
         mov dl, [bx]
-        cmp drawOrErase, 0
+        test drawOrErase, 0FFh
         jne drawYellowEnemyShotTrail
         mov dl, bgColor
         drawYellowEnemyShotTrail:
@@ -2785,7 +2788,7 @@ moveYellowEnemyShots PROC
         cmp si, ax
         ja moveYellowEnemyShotsEnd ;No shots are available
         
-        cmp yellowEnemyShots.xArr[si], 0
+        test yellowEnemyShots.xArr[si], 0FFFFh
         jne moveCurrentYellowEnemyShot ;Shot initialized
         
         jmp handleYellowEnemyShots ;Shot NOT initialized
@@ -2799,7 +2802,7 @@ moveYellowEnemyShots PROC
         
         ;Check collisions
         call yellowEnemyShotCollisions
-        cmp dh, 0 ;Return is boolean
+        test dh, 0FFh ;Return is boolean
         je moveYellowEnemyShotsDraw ;No collision detected
         
         ;DH is 1, collosion detected: reset shot
@@ -2823,7 +2826,7 @@ moveYellowEnemyShots ENDP
 yellowEnemyShotCollisions PROC
     push cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, yellowEnemyShots.xArr[si]
@@ -3223,7 +3226,7 @@ initShop PROC
 
     mov playerShots.xArr[0], 130
     mov playerShots.yArr[0], 194
-    mov bx, 0
+    xor bx, bx
     call drawPlayerShot
 
     RET
@@ -3254,7 +3257,7 @@ buyShots PROC
     jge buyShotsEnd
 
     ;Move to AX
-    mov ah, 0
+    xor ah, ah
     mov al, shotPrices[bx - 1] ;1 is initial real max
     cmp playerScore, ax
     jl buyShotsEnd
@@ -3294,7 +3297,7 @@ main:
         call drawStars
     
         call handleGameInput
-        cmp playerHP, 0 ;Check if player died
+        test playerHP, 0FFFFh ;Check if player died
         jg game
 
         ;End of game loop
