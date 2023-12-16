@@ -102,22 +102,33 @@ shotPrices db 10, 15, 20, 25
 
 .code
 
+;----------------------------------------------------MACROS DEFINITION-----------------------------------------------------------------------------------------------------------------
+
+
+DRAW_HORIZONTAL MACRO len
+    mov cx, len
+    call horizontalLine
+ENDM
+
+
+DRAW_VERTICAL MACRO height
+    mov cx, height
+    call verticalLine
+ENDM
+
 ;--------------------------------------------------HANDLE NUMS PRINTING----------------------------------------------------------------------------------------------------------------
 
 
 draw0 PROC
     inc di
     mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL cx
     add di, windowWidth + 1
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     add di, windowWidth - 3
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     sub di, windowWidth*5 + 3
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     RET
 draw0 ENDP
 
@@ -127,19 +138,15 @@ draw1 PROC
     inc di
     mov es:[di], dl
     sub di, windowWidth - 1
-    mov cx, 6
-    call verticalLine
+    DRAW_VERTICAL 6
     add di, windowWidth - 2
-    mov cx, 5
-    call horizontalLine
-    
+    DRAW_HORIZONTAL 5    
     RET
 draw1 ENDP
 
 draw2 PROC
     inc di
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 3
     mov es:[di], dl
     add di, 4
@@ -149,15 +156,13 @@ draw2 PROC
         add di, windowWidth - 1
         loop draw2Loop1
     inc di
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     RET
 draw2 ENDP
 
 draw3 PROC
     inc di
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 3
     mov es:[di], dl
     add di, 4
@@ -175,14 +180,12 @@ draw3 PROC
     sub di, 4
     mov es:[di], dl
     add di, windowWidth + 1
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     RET
 draw3 ENDP
 
 draw4 PROC
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     inc di
     mov es:[di], dl
     inc di
@@ -190,27 +193,22 @@ draw4 PROC
     add di, 2
     mov es:[di], dl
     sub di, windowWidth*4 + 1
-    mov cx, 7
-    call verticalLine
+    DRAW_VERTICAL 7
     RET
 draw4 ENDP
 
 draw5 PROC
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 4
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     inc di
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth + 1
     mov es:[di], dl
     add di, windowWidth
     mov es:[di], dl
     add di, windowWidth - 4
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     RET
 draw5 ENDP
 
@@ -219,16 +217,14 @@ draw6 PROC
     mov cx, 3 ;Number of lines
     draw6Middles:
         push cx
-        mov cx, 3
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         add di, windowWidth*3 - 2
         loop draw6Middles
     sub di, windowWidth*8 - 3
     mov es:[di], dl
     sub di, 4
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     add di, 4
     mov es:[di], dl
     sub di, windowWidth
@@ -237,8 +233,7 @@ draw6 PROC
 draw6 ENDP
 
 draw7 PROC
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     inc di
     mov cx, 3
     draw7Loop1:
@@ -246,8 +241,7 @@ draw7 PROC
         mov es:[di], dl
         loop draw7Loop1
     add di, windowWidth
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     RET
 draw7 ENDP
 
@@ -256,8 +250,7 @@ draw8 PROC
     mov cx, 3 ;Number of lines
     draw8Middles:
         push cx
-        mov cx, 3
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         add di, windowWidth*3 - 2
         loop draw8Middles
@@ -281,8 +274,7 @@ draw9 PROC
     mov cx, 3 ;Number of lines
     draw9Middles:
         push cx
-        mov cx, 3
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         add di, windowWidth*3 - 2
         loop draw9Middles
@@ -293,8 +285,7 @@ draw9 PROC
     add di, windowWidth*3
     mov es:[di], dl
     sub di, windowWidth*4 - 4
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     RET
 draw9 ENDP
 
@@ -459,10 +450,9 @@ deleteScore PROC
     mov cx, 7       ;Height of digits
     deleteScoreLoop:
         push cx
-        mov cx, 21  ;Width to delete
-        call horizontalLine
-        add di, windowWidth - 20
+        DRAW_HORIZONTAL 21 ;Width to delete
         pop cx
+        add di, windowWidth - 20
         loop deleteScoreLoop
     
     pop di
@@ -856,20 +846,16 @@ drawBorder PROC
     mov dl, borderColor
 
     mov di, 0
-    mov cx, windowWidth
-    call horizontalLine ;Top
+    DRAW_HORIZONTAL windowWidth ;Top
     
     mov di, 0
-    mov cx, windowHeight
-    call verticalLine   ;Left
+    DRAW_VERTICAL windowHeight  ;Left
     
     mov di, (windowHeight - 1)*windowWidth ;(index)
-    mov cx, windowWidth
-    call horizontalLine ;Bottom
+    DRAW_HORIZONTAL windowWidth ;Bottom
     
-    mov di, windowWidth - 1 ;(index)
-    mov cx, windowHeight
-    call verticalLine   ;Right
+    mov di, windowWidth - 1     ;(index)
+    DRAW_VERTICAL windowHeight  ;Right
     
     pop di
     pop dx
@@ -917,44 +903,37 @@ drawCoin PROC
     mov dl, 2Bh    ;Light orange
     mov di, bx
     add di, 2
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth + 1
     mov es:[di], dl
     add di, windowWidth + 1
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     add di, windowWidth - 1
     mov es:[di], dl
     add di, windowWidth - 5
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     sub di, windowWidth + 5
     mov es:[di], dl
     sub di, windowWidth*6
     mov es:[di], dl
     add di, windowWidth - 1
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     
     ;Inner part
     mov dl, 0Eh ;Light yellow
     mov di, bx
     add di, windowWidth + 2
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 5
     mov cx, 5
     drawCoinInnerLoop:
         push cx
-        mov cx, 7
-        call horizontalLine
-        add di, windowWidth - 6
+        DRAW_HORIZONTAL 7
         pop cx
+        add di, windowWidth - 6
         loop drawCoinInnerLoop
     inc di
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     
     ;Coin shine
     mov dl, 0Fh ;White
@@ -1036,23 +1015,17 @@ drawHeart PROC
     inc di
     mov es:[di], dl
     add di, windowWidth - 7
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 2
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 8
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 7
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, windowWidth - 5
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 3
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 1
     mov es:[di], dl
     
@@ -1109,22 +1082,17 @@ drawPlayer PROC
     ;WINGS
     mov di, bx ;Reset to anchor
     add di, 3
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     
     add di, windowWidth - 10
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     add di, 9*windowWidth - 10
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     
     add di, 9*windowWidth - 10
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     
     
     ;ENGINE DARK GREYS
@@ -1136,12 +1104,10 @@ drawPlayer PROC
     add di, windowWidth
     mov es:[di], dl
     add di, windowWidth - 1
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     
     add di, 8*windowWidth - 3
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 2
     mov es:[di], dl
     add di, windowWidth
@@ -1156,8 +1122,7 @@ drawPlayer PROC
     mov cx, 5  ;Num of rows
     drawCockpit:
         push cx
-        mov cx, 10 ;Row width
-        call horizontalLine
+        DRAW_HORIZONTAL 10 ;Row width
         pop cx
         add di, windowWidth - 9 ;Move to next row
         loop drawCockpit
@@ -1184,10 +1149,9 @@ drawPlayer PROC
     mov es:[di], dl
     
     ;COCKPIT DARKER GREY
-    mov di, bx ;Reset to anchor
+    mov di, bx      ;Reset to anchor
     add di, 9*windowWidth + 20
-    mov cx, 3  ;Height of line
-    call verticalLine
+    DRAW_VERTICAL 3 ;Height of line
     
     
     mov dl, 0Ch ;Red
@@ -1253,17 +1217,13 @@ drawPlayer PROC
     ;COCKPIT BLUE
     mov di, bx ;Reset to anchor
     add di, 9*windowWidth + 16
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, 2*windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, 2*windowWidth - 2
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, 2*windowWidth - 2
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth - 1
     mov es:[di], dl
     
@@ -1277,63 +1237,45 @@ drawPlayer PROC
     ;SHIP BODY
     mov di, bx ;Reset to anchor
     add di, 2*windowWidth + 6
-    mov cx, 10
-    call drawHorizontal
+    DRAW_HORIZONTAL 10
     add di, windowWidth - 9
-    mov cx, 10
-    call drawHorizontal
+    DRAW_HORIZONTAL 10
     add di, windowWidth - 8
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 8
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     
     add di, windowWidth - 12
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 8
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 1
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 8
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 8
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     
     add di, windowWidth - 6
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 12
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 11
-    mov cx, 10
-    call horizontalLine
+    DRAW_HORIZONTAL 10
     add di, windowWidth - 9
-    mov cx, 10
-    call horizontalLine
+    DRAW_HORIZONTAL 10
     
     mov di, bx ;Reset to anchor
     add di, 10*windowWidth + 26
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     
     pop dx
     pop cx
@@ -1602,11 +1544,9 @@ drawPlayerShot PROC
         mov dl, bgColor
         drawPlayerShotTrail:
         push cx
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
         pop cx
         inc bx ;Get next color
@@ -1622,8 +1562,7 @@ drawPlayerShot PROC
     mov cx, playerShotHeight
     drawPlayerShotRows:
         push cx
-        mov cx, playerShotWidth - 6 ;6 is trails
-        call horizontalLine
+        DRAW_HORIZONTAL playerShotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
         add di, windowWidth - playerShotWidth + 7 ;Next row
         loop drawPlayerShotRows
@@ -1788,21 +1727,17 @@ drawBlueEnemy PROC
     
     drawBlueEnemyLightGrey:
     add di, 5
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 14
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, 10
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 16
     mov es:[di], dl
     inc di
     mov es:[di], dl
     add di, 14
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth
     mov es:[di], dl
     add di, windowWidth
@@ -1814,11 +1749,9 @@ drawBlueEnemy PROC
     add di, windowWidth - 1
     mov es:[di], dl
     dec di
-    mov cx, 7
-    call verticalLine
+    DRAW_VERTICAL 7
     inc di
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     inc di
     mov es:[di], dl
     add di, windowWidth
@@ -1826,14 +1759,11 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     add di, windowWidth
-    mov cx, 4
-    call drawHorizontal
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 2
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     sub di, windowWidth + 2
-    mov cx, 4
-    call drawHorizontal
+    DRAW_HORIZONTAL 4
     sub di, windowWidth
     mov es:[di], dl
     inc di
@@ -1849,8 +1779,7 @@ drawBlueEnemy PROC
     sub di, windowWidth
     mov es:[di], dl
     sub di, 6*windowWidth - 1
-    mov cx, 7
-    call verticalLine
+    DRAW_VERTICAL 7
     
     mov dl, 15h     ;Dark grey
     cmp drawOrErase, 1
@@ -1860,11 +1789,9 @@ drawBlueEnemy PROC
     drawBlueEnemyDarkGrey:
     mov di, bx ;Reset to anchor
     add di, windowWidth + 7
-    mov cx, 9
-    call drawHorizontal
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 9
-    mov cx, 11
-    call drawHorizontal
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 10
     mov es:[di], dl
     inc di
@@ -1874,17 +1801,13 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     add di, 2
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, 8*windowWidth - 1
-    mov cx, 8
-    call verticalLine
+    DRAW_VERTICAL 8
     sub di, 5*windowWidth - 1
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     add di, windowWidth - 3
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     dec di
     mov es:[di], dl
     add di, windowWidth
@@ -1898,14 +1821,11 @@ drawBlueEnemy PROC
     sub di, windowWidth
     mov es:[di], dl
     sub di, 2*windowWidth + 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, 8*windowWidth + 1
-    mov cx, 8
-    call verticalLine
+    DRAW_VERTICAL 8
     sub di, 6*windowWidth + 1
-    mov cx, 5
-    call verticalLine
+    DRAW_VERTICAL 5
     
     mov dl, 0Eh     ;Yellow
     cmp drawOrErase, 1
@@ -1915,15 +1835,13 @@ drawBlueEnemy PROC
     drawBlueEnemyYellow:
     mov di, bx ;Reset to anchor
     add di, 2*windowWidth + 5
-    mov cx, 4
-    call verticalLine
+    DRAW_VERTICAL 4
     sub di, windowWidth - 1
     mov es:[di], dl
     add di, 10
     mov es:[di], dl
     sub di, 2*windowWidth - 1
-    mov cx, 4
-    call verticalLine
+    DRAW_VERTICAL 4
     
     
     mov dl, 36h     ;Blue
@@ -1934,59 +1852,41 @@ drawBlueEnemy PROC
     drawBlueEnemyBlue:
     mov di, bx ;Reset to anchor
     add di, 3*windowWidth + 8
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, windowWidth - 7
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 9
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 4
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 11
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 6
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 12
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, 8
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 12
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, 8
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 12
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 6
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 11
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 4
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 10
-    mov cx, 11
-    call horizontalLine
+    DRAW_HORIZONTAL 11
     add di, windowWidth - 9
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 7
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, windowWidth - 5
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     
     
     mov dl, 0Fh     ;White
@@ -1997,11 +1897,9 @@ drawBlueEnemy PROC
     drawBlueEnemyWhite:
     mov di, bx ;Reset to anchor
     add di, 5*windowWidth + 10
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 3
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 5
     mov es:[di], dl
     inc di
@@ -2019,11 +1917,9 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     add di, windowWidth - 5
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 3
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     
     
     mov dl, 14h     ;Darker grey
@@ -2034,11 +1930,9 @@ drawBlueEnemy PROC
     drawBlueEnemyDarkerGrey:
     mov di, bx ;Reset to anchor
     add di, 7*windowWidth + 10
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 2
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     
     
     mov dl, blueEnemyColor ;Lilac
@@ -2055,11 +1949,9 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     add di, windowWidth - 14
-    mov cx, 15
-    call horizontalLine
+    DRAW_HORIZONTAL 15
     add di, windowWidth - 14
-    mov cx, 15
-    call horizontalLine
+    DRAW_HORIZONTAL 15
     
     
     mov dl, blueEnemyColor ;Lilac
@@ -2084,8 +1976,7 @@ drawBlueEnemy PROC
     dec di
     mov es:[di], dl
     sub di, 2*windowWidth - 11
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, 3*windowWidth - 8
     mov es:[di], dl
     add di, windowWidth
@@ -2127,17 +2018,14 @@ drawYellowEnemy PROC
     
     drawYellowEnemyOuter:
     add di, 7
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 10
-    mov cx, 13
-    call horizontalLine
+    DRAW_HORIZONTAL 13
     mov cx, 3
     yellowEnemyOuterLoop:
         push cx
-        mov cx, 3
         add di, windowWidth - 1
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         loop yellowEnemyOuterLoop
     add di, windowWidth - 1
@@ -2147,11 +2035,9 @@ drawYellowEnemy PROC
     add di, windowWidth - 1
     mov es:[di], dl
     inc di
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*8 - 1
-    mov cx, 8
-    call verticalLine
+    DRAW_VERTICAL 8
     sub di, 2
     mov es:[di], dl
     add di, windowWidth - 1
@@ -2159,77 +2045,53 @@ drawYellowEnemy PROC
     inc di
     mov es:[di], dl
     add di, windowWidth - 3
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, windowWidth - 16
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 4
-    call horizontalLine
+    DRAW_HORIZONTAL 4
     add di, 3
-    mov cx, 6
-    call horizontalLine
+    DRAW_HORIZONTAL 6
     add di, 3
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 15
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, 3
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, windowWidth - 14
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 14
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, 3
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, 3
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 1
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 1
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     sub di, 15
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     sub di, windowWidth + 1
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     sub di, windowWidth + 1
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     sub di, windowWidth*5 + 2
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     sub di, windowWidth + 3
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     sub di, windowWidth + 2
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     sub di, windowWidth*7 + 2
-    mov cx, 7
-    call verticalLine
+    DRAW_VERTICAL 7
     sub di, windowWidth*8 - 1
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*9 - 1
-    mov cx, 4
-    call verticalLine
+    DRAW_VERTICAL 4
     sub di, windowWidth*4 - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth*2 - 1
-    mov cx, 2
-    call verticalLine
+    DRAW_VERTICAL 2
     sub di, windowWidth - 1
     mov es:[di], dl
 
@@ -2241,55 +2103,42 @@ drawYellowEnemy PROC
     drawYellowEnemyInner:
     mov di, bx ;Anchor
     add di, windowWidth*2 + 7
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     mov cx, 3
     yellowEnemyInnerLoop1:
         push cx
         add di, windowWidth - 1
-        mov cx, 3
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         loop yellowEnemyInnerLoop1
     add di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth*2 - 1
-    mov cx, 4
-    call verticalLine
+    DRAW_VERTICAL 4
     sub di, windowWidth*2 - 1
-    mov cx, 6
-    call verticalLine
+    DRAW_VERTICAL 6
     sub di, windowWidth + 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth + 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth*12 + 8
     mov cx, 3
     yellowEnemyInnerLoop2:
         push cx
-        mov cx, 3
         add di, windowWidth - 3
-        call horizontalLine
+        DRAW_HORIZONTAL 3
         pop cx
         loop yellowEnemyInnerLoop2
     add di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth*2 + 1
-    mov cx, 4
-    call verticalLine
+    DRAW_VERTICAL 4
     sub di, windowWidth*2 + 1
-    mov cx, 6
-    call verticalLine
+    DRAW_VERTICAL 6
     sub di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
 
     mov dl, 2Ch
     cmp drawOrErase, 1
@@ -2299,44 +2148,33 @@ drawYellowEnemy PROC
     drawYellowEnemyAlien:
     mov di, bx
     add di, windowWidth*3 + 9
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     add di, windowWidth - 5
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     add di, windowWidth - 7
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     add di, windowWidth - 7
     mov es:[di], dl
     sub di, 2
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*8 - 1
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*5 - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     add di, windowWidth*3
     mov es:[di], dl
     add di, windowWidth - 1
-    mov cx, 9
-    call horizontalLine
+    DRAW_HORIZONTAL 9
     sub di, windowWidth*5 + 11
     mov es:[di], dl
     sub di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth - 4
-    mov cx, 5
-    call horizontalLine
+    DRAW_HORIZONTAL 5
     sub di, windowWidth - 1
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth*2 - 3
-    mov cx, 3
-    call verticalLine
+    DRAW_VERTICAL 3
     sub di, windowWidth - 1
     mov es:[di], dl
     add di, windowWidth*4 - 4
@@ -2344,11 +2182,9 @@ drawYellowEnemy PROC
     sub di, windowWidth*8
     mov es:[di], dl
     inc di
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*8 - 1
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     
     mov dl, 0Fh
     cmp drawOrErase, 1
@@ -2361,23 +2197,17 @@ drawYellowEnemy PROC
     mov cx, 2
     yellowEnemyEyesLoop:
         push cx
-        mov cx, 5
-        call horizontalLine
+        DRAW_HORIZONTAL 5
         add di, windowWidth - 5
-        mov cx, 2
-        call horizontalLine
+        DRAW_HORIZONTAL 2
         add di, windowWidth - 1
-        mov cx, 2
-        call horizontalLine
+        DRAW_HORIZONTAL 2
         add di, windowWidth
-        mov cx, 5
-        call horizontalLine
+        DRAW_HORIZONTAL 5
         sub di, windowWidth
-        mov cx, 2
-        call horizontalLine
+        DRAW_HORIZONTAL 2
         sub di, windowWidth + 1
-        mov cx, 2
-        call horizontalLine
+        DRAW_HORIZONTAL 2
         add di, windowWidth*4 - 5
         pop cx
         loop yellowEnemyEyesLoop
@@ -2390,17 +2220,13 @@ drawYellowEnemy PROC
     drawYellowEnemyPupils:
     mov di, bx
     add di, windowWidth*7 + 10
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 2
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth*4 - 2
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
     add di, windowWidth - 2
-    mov cx, 3
-    call horizontalLine
+    DRAW_HORIZONTAL 3
 
     mov dl, 0Ch
     cmp drawOrErase, 1
@@ -2410,14 +2236,11 @@ drawYellowEnemy PROC
     drawYellowEnemyLights:
     mov di, bx
     add di, windowWidth*17 + 7
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     add di, 7
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 5
-    mov cx, 2
-    call horizontalLine
+    DRAW_HORIZONTAL 2
 
     pop dx
     pop cx
@@ -2623,8 +2446,7 @@ drawBlueEnemyShot PROC
     mov cx, enemyShotHeight
     drawBlueEnemyShotRows:
         push cx
-        mov cx, enemyShotWidth - 6 ;6 is trails
-        call horizontalLine
+        DRAW_HORIZONTAL enemyShotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
         add di, windowWidth - enemyShotWidth + 7 ;Next row
         loop drawBlueEnemyShotRows
@@ -2640,11 +2462,9 @@ drawBlueEnemyShot PROC
         mov dl, bgColor
         drawBlueEnemyShotTrail:
         push cx
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
         pop cx
         inc bx ;Get next color
@@ -2816,8 +2636,7 @@ drawYellowEnemyShot PROC
     mov cx, enemyShotHeight
     drawYellowEnemyShotRows:
         push cx
-        mov cx, enemyShotWidth - 6 ;6 is trails
-        call horizontalLine
+        DRAW_HORIZONTAL enemyShotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
         add di, windowWidth - enemyShotWidth + 7 ;Next row
         loop drawYellowEnemyShotRows
@@ -2833,11 +2652,9 @@ drawYellowEnemyShot PROC
         mov dl, bgColor
         drawYellowEnemyShotTrail:
         push cx
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
-        mov cx, 2
-        call verticalLine
+        DRAW_VERTICAL 2
         sub di, windowWidth - 1
         pop cx
         inc bx ;Get next color
@@ -2951,190 +2768,136 @@ yellowEnemyShotCollisions ENDP
 
 
 drawA PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     sub di, windowWidth + 15
     call drawH
     RET
 drawA ENDP
 
 drawC PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     sub di, windowWidth*19 - 1
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     add di, windowWidth - 1
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     RET
 drawC ENDP
 
 drawE PROC
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     sub di, windowWidth*23 - 1
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     inc di
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     sub di, windowWidth + 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     sub di, windowWidth*10 + 13
-    mov cx, 13
-    call horizontalLine
+    DRAW_HORIZONTAL 13
     add di, windowWidth - 12
-    mov cx, 13
-    call horizontalLine
+    DRAW_HORIZONTAL 13
     sub di, windowWidth*13 + 12
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     RET
 drawE ENDP
 
 drawG PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     sub di, windowWidth*19 - 1
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     add di, windowWidth - 1
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     sub di, windowWidth*11
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     sub di, windowWidth*9 + 6
-    mov cx, 6
-    call horizontalLine
+    DRAW_HORIZONTAL 6
     RET
 drawG ENDP
 
 drawH PROC
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     sub di, windowWidth*23 - 1
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     sub di, windowWidth*12 - 1
-    mov cx, 12
-    call horizontalLine
+    DRAW_HORIZONTAL 12
     add di, windowWidth - 11
-    mov cx, 12
-    call horizontalLine
+    DRAW_HORIZONTAL 12
     sub di, windowWidth*12 - 1
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     sub di, windowWidth*23 - 1
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     RET
 drawH ENDP
 
 drawO PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth*22 - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     sub di, windowWidth + 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     sub di, windowWidth*20 + 15
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     sub di, windowWidth*19 - 1
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     sub di, windowWidth*19 - 14
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     sub di, windowWidth*19 + 1
-    mov cx, 20
-    call verticalLine
+    DRAW_VERTICAL 20
     RET
 drawO ENDP
 
 drawP PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     sub di, windowWidth*21 - 1
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     sub di, windowWidth*22 - 13
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     sub di, windowWidth*9 - 1
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     add di, windowWidth - 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     RET
 drawP ENDP
 
 drawR PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     sub di, windowWidth*21 - 1
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     sub di, windowWidth*12 - 1
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     sub di, windowWidth*10
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     sub di, windowWidth*8 + 1
-    mov cx, 9
-    call verticalLine
+    DRAW_VERTICAL 9
     add di, windowWidth - 4
     mov cx, 6
     drawRLoop:
@@ -3149,50 +2912,36 @@ drawR PROC
 drawR ENDP
 
 drawS PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     sub di, windowWidth*9 - 1
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     add di, windowWidth - 1
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     sub di, windowWidth + 14
-    mov cx, 15
-    call horizontalLine
+    DRAW_HORIZONTAL 15
     add di, windowWidth*2
-    mov cx, 11
-    call verticalLine
+    DRAW_VERTICAL 11
     sub di, windowWidth*10 + 1
-    mov cx, 11
-    call verticalLine
+    DRAW_VERTICAL 11
     sub di, windowWidth + 14
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     add di, windowWidth - 13
-    mov cx, 14
-    call horizontalLine
+    DRAW_HORIZONTAL 14
     RET
 drawS ENDP
 
 drawT PROC
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 15
-    mov cx, 16
-    call horizontalLine
+    DRAW_HORIZONTAL 16
     add di, windowWidth - 7
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     sub di, windowWidth*21 + 1
-    mov cx, 22
-    call verticalLine
+    DRAW_VERTICAL 22
     RET
 drawT ENDP
 
@@ -3214,8 +2963,7 @@ printDeathScreen PROC
     ;Draw M
     add bx, 29
     mov di, bx
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     sub di, windowWidth*23
     mov cx, 8
     mLoop1:
@@ -3233,8 +2981,7 @@ printDeathScreen PROC
         mov es:[di], dl
         loop mLoop2
     sub di, windowWidth - 1
-    mov cx, 24
-    call verticalLine
+    DRAW_VERTICAL 24
     
     add bx, 29
     mov di, bx
@@ -3286,14 +3033,11 @@ initShop PROC
     ;Shop border
     mov dl, borderColor
     mov di, windowWidth*189 + 80
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     mov di, windowWidth*189 + 240
-    mov cx, 10
-    call verticalLine
+    DRAW_VERTICAL 10
     mov di, windowWidth*189 + 81
-    mov cx, 159
-    call horizontalLine
+    DRAW_HORIZONTAL 159
 
     mov di, windowWidth*191 + 120
     call drawPlus
@@ -3313,11 +3057,9 @@ drawPlus PROC
     push di
     mov dl, 2
     add di, 3
-    mov cx, 7
-    call verticalLine
+    DRAW_VERTICAL 7
     sub di, windowWidth*3 + 3
-    mov cx, 7
-    call horizontalLine
+    DRAW_HORIZONTAL 7
     pop di
     pop dx
     pop cx
