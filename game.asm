@@ -3,7 +3,6 @@
 ;Colors are from mode 13h VGA color palette
 ;DL/DX are affected by mul & div!
 ;XOR x, x resets x
-;TEST = AND without storing, like cmp & sub. TEST AL, 0FFh == cmp AL, 0
 ;byte ptr to indicate byte-sized operand
 ;Procs are grouped to sections
 .model small
@@ -396,7 +395,7 @@ drawScore PROC
     cmp playerScore, 2559
     jbe drawValidScore
     
-    ;Reset score, its invalid
+    ;Reset score, it's invalid
     mov playerScore, 0
     
     drawValidScore:
@@ -513,11 +512,11 @@ welcomeScreen PROC
     call drawPlayerShot
     mov playerShots.xArr[1], 115
     mov playerShots.yArr[1], 151
-    mov bx, 1
+    inc bx
     call drawPlayerShot
     mov playerShots.xArr[2], 150
     mov playerShots.yArr[2], 149
-    mov bx, 2
+    inc bx
     call drawPlayerShot
     
     ;Blue enemy & shots
@@ -555,7 +554,7 @@ welcomeScreen ENDP
 welcomeScreenName PROC
     mov cx, 95
     mov dx, 60
-    call getPosition
+    call getPosition ;To DI
     mov bx, di ;Save anchor
 
     mov dl, 0Fh
@@ -2968,7 +2967,7 @@ initShop PROC
 
     mov playerShots.xArr[0], 130
     mov playerShots.yArr[0], 194
-    xor bx, bx
+    xor bx, bx ;Draw first shot
     call drawPlayerShot
 
     RET
