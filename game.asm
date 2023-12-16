@@ -2,6 +2,8 @@
 ;Anchor tile is at top-left (0,0)
 ;Colors are from mode 13h VGA color palette
 ;DL/DX are affected by mul & div!
+;XOR x, x resets x
+;TEST = AND without storing, like cmp & sub. TEST AL, 0FFh == cmp AL, 0
 ;byte ptr to indicate byte-sized operand
 ;Procs are grouped to sections
 .model small
@@ -78,7 +80,7 @@ enemyShootRate equ 300 ;300f/120fps = 2.5secs
 enemyShotWidth equ 10
 enemyShotHeight equ 2  ;Max = max(enemyHeights)
 numOfEnemies equ 2
-allEnemies dq 2 dup(enemy) ;Blue, yellow
+allEnemies dq numOfEnemies dup(enemy) ;Blue, yellow
 currentEnemy dw 0 ;0=blue, 1=yellow
 
 ;Blue enemy variables
@@ -291,9 +293,7 @@ draw9 ENDP
 
 drawDigit PROC
     ;Digit to draw in AL
-    push di
-    push cx
-    push dx
+    push di cx dx
     mov dl, 2Ch ;Yellow
     
     cmp al, 0
@@ -351,16 +351,13 @@ drawDigit PROC
         jmp drawDigitEnd
     
     drawDigitEnd:
-    pop dx
-    pop cx    
-    pop di
+    pop dx cx di
     RET
 drawDigit ENDP
 
 getPowerOf10 PROC
     ;Number is in AX, return in CX
-    push ax
-    push bx
+    push ax bx
     
     ;Handle special case
     mov cx, 10 ;For special case 10
@@ -381,24 +378,19 @@ getPowerOf10 PROC
         mov cx, ax
         
         ;Move last quotient to AX
-        mov ah, 0
+        xor ah, ah
         mov al, bh
         cmp bh, 10
         jae getPowerOf10Loop
     
     getPowerOf10End:
-    pop bx
-    pop ax
+    pop bx ax
     RET
 getPowerOf10 ENDP
 
 ;IMPORTANT: Max score is 2559, since 2560 = A00 -> /10 = 256 (results in overflow)
 drawScore PROC
-    push ax
-    push bx
-    push cx
-    push dx
-    push di
+    push ax bx cx dx di
     call deleteScore  ;Delete last score
     
     cmp playerScore, 2559
@@ -414,35 +406,30 @@ drawScore PROC
     mov bl, 10     ;Const of divisor
     mov di, 794    ;Position of score
     drawScoreLoop:
-        mov dx, 0  ;Divs change dx, necessary
+        xor dx, dx  ;Divs change dx, necessary
         div cx     ;AX = quotient, DX = remainder
         
         ;Digit is in AL
-        mov ah, 0
+        xor ah, ah
         call drawDigit
         add di, 7
         
         ;Divisor CX /= 10
         mov ax, cx
         div bl
-        mov ch, 0
+        xor ch, ch
         mov cl, al
         
         mov ax, dx ;Save remainder for next iteration
         cmp cx, 0  ;Check divisor
         jne drawScoreLoop
     
-    pop di
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    pop di dx cx bx ax
     RET
 drawScore ENDP
 
 deleteScore PROC
-    push cx
-    push di
+    push cx di
     
     mov di, 794
     mov dl, bgColor ;Color
@@ -455,8 +442,7 @@ deleteScore PROC
         add di, windowWidth - 20
         loop deleteScoreLoop
     
-    pop di
-    pop cx
+    pop di cx
     RET
 deleteScore ENDP
 
@@ -480,7 +466,7 @@ getPosition ENDP
 randomize PROC
     ;Randomizes between range in BL(min) -> BH(max)
     ;Returns number in DX
-    mov ah, 0
+    xor ah, ah
     int 1Ah    ;Randomize number (up to 65355) to CX:DX
     
     ;Calc modulu divider: max - min + 1
@@ -488,15 +474,15 @@ randomize PROC
     inc bh
 
     ;Move minimum to CX
-    mov ch, 0
+    xor ch, ch
     mov cl, bl ;Store minimum
 
     ;Move BH to BX
     mov bl, bh
-    mov bh, 0
+    xor bh, bh
 
     mov ax, dx ;DX holds randomized num
-    mov dx, 0  ;Reset for div instruction
+    xor dx, dx ;Reset for div instruction
     div bx     ;Modulu to get remainder (in DX)
 
     add dx, cx ;Add minimum, now stores final randomized
@@ -523,7 +509,7 @@ welcomeScreen PROC
     call drawPlayer
     mov playerShots.xArr[0], 65
     mov playerShots.yArr[0], 148
-    mov bx, 0
+    xor bx, bx
     call drawPlayerShot
     mov playerShots.xArr[1], 115
     mov playerShots.yArr[1], 151
@@ -540,11 +526,11 @@ welcomeScreen PROC
     call drawBlueEnemy
     mov blueEnemyShots.xArr[0], 200
     mov blueEnemyShots.yArr[0], 40
-    mov si, 0
+    xor si, si ;SI = 0
     call drawBlueEnemyShot
     mov blueEnemyShots.xArr[1], 100
     mov blueEnemyShots.yArr[1], 42
-    mov si, 1
+    inc si     ;SI = 1
     call drawBlueEnemyShot
 
     ;Yellow enemy & shots
@@ -553,7 +539,7 @@ welcomeScreen PROC
     call drawYellowEnemy
     mov yellowEnemyShots.xArr[0], 175
     mov yellowEnemyShots.yArr[0], 148
-    mov si, 0
+    xor si, si
     call drawYellowEnemyShot
 
     call welcomeScreenName
@@ -635,9 +621,9 @@ initializeGame PROC
     call drawPlayerHP
     call drawCoin
     call drawScore
-    mov bx, 0
+    xor bx, bx ;BX = 0
     call killEnemy
-    mov bx, 1
+    inc bx     ;BX = 1
     call killEnemy
     
     mov drawOrErase, 1
@@ -655,7 +641,7 @@ handleGameInput PROC
     int 16h
     jz handleGameInputEnd ;If key not pressed
     
-    mov ah, 0 ;Get key ASCII to AL & BIOS code to AH
+    xor ah, ah ;AH=0 -> Get key ASCII to AL & BIOS code to AH
     int 16h
     
     cmp al, 'w'
@@ -718,9 +704,9 @@ handleGameInput ENDP
 
 delay PROC
     ;Delay 8.334 ms between each frame = 120hz
-    mov cx, 0
+    xor cx, cx
     mov dx, delayTime
-    mov ah, 86h
+    mov ah, 86h ;Delays by CX:DX microseconds
     int 15h
     RET
 delay ENDP
@@ -799,18 +785,16 @@ initEnemy ENDP
 
 
 cls PROC
-    push cx
-    push di
+    push cx di
 
-    mov di, 0
+    xor di, di
     mov cx, windowWidth*windowHeight
     clsLoop:
         inc di
         mov byte ptr es:[di], bgColor
         loop clsLoop
     
-    pop di
-    pop cx
+    pop di cx
     RET
 cls ENDP
 
@@ -840,15 +824,13 @@ verticalLine ENDP
 
 
 drawBorder PROC
-    push cx    
-    push dx
-    push di
+    push cx dx di
     mov dl, borderColor
 
-    mov di, 0
+    xor di, di
     DRAW_HORIZONTAL windowWidth ;Top
     
-    mov di, 0
+    xor di, di
     DRAW_VERTICAL windowHeight  ;Left
     
     mov di, (windowHeight - 1)*windowWidth ;(index)
@@ -857,18 +839,13 @@ drawBorder PROC
     mov di, windowWidth - 1     ;(index)
     DRAW_VERTICAL windowHeight  ;Right
     
-    pop di
-    pop dx
-    pop cx
+    pop di dx cx
     RET
 drawBorder ENDP
 
 
 drawStars PROC
-    push bx
-    push cx
-    push dx
-    push di
+    push bx cx dx di
     
     mov dl, starsColor
     lea bx, starsPositions
@@ -883,19 +860,13 @@ drawStars PROC
         add bx, 2
         loop drawStarsLoop
     
-    pop di
-    pop dx
-    pop cx
-    pop bx
+    pop di dx cx bx
     RET
 drawStars ENDP
 
 
 drawCoin PROC
-    push bx
-    push cx
-    push dx
-    push di
+    push bx cx dx di
     
     mov bx, 462    ;Anchor point
     
@@ -943,19 +914,14 @@ drawCoin PROC
     add di, windowWidth - 1
     mov es:[di], dl
     
-    pop di
-    pop dx
-    pop cx
-    pop bx
+    pop di dx cx bx
     RET
 drawCoin ENDP
 
 
 drawHeart PROC
     ;DI holds position
-    push cx
-    push dx
-    push di
+    push cx dx di
     
     mov dl, 4       ;Dark red
     cmp drawOrErase, 1
@@ -1029,18 +995,14 @@ drawHeart PROC
     add di, windowWidth - 1
     mov es:[di], dl
     
-    pop di
-    pop dx
-    pop cx
+    pop di dx cx
     RET
 drawHeart ENDP
 
 
 ;Called once to initialize GUI
 drawPlayerHP PROC
-    push cx
-    push dx
-    push di
+    push cx dx di
     ;Heart size is 11*9
     mov cx, windowWidth - 14 ;X value
     mov dx, 1                ;Y value
@@ -1053,9 +1015,7 @@ drawPlayerHP PROC
         sub di, 14 ;Space for next heart
         loop drawPlayerHPLoop
     
-    pop di
-    pop dx
-    pop cx
+    pop di dx cx
     RET
 drawPlayerHP ENDP
 
@@ -1064,9 +1024,7 @@ drawPlayerHP ENDP
 
 
 drawPlayer PROC
-    push bx
-    push cx
-    push dx
+    push bx cx dx
     
     mov cx, playerX
     mov dx, playerY
@@ -1277,9 +1235,7 @@ drawPlayer PROC
     add di, 10*windowWidth + 26
     DRAW_HORIZONTAL 5
     
-    pop dx
-    pop cx
-    pop bx
+    pop dx cx bx
     RET
 drawPlayer ENDP
 
@@ -1351,9 +1307,7 @@ movePlayer ENDP
 
 
 checkPlayerCollisions PROC
-    push cx
-    push dx
-    push di
+    push cx dx di
     ;NOTE: top, middle and bottom sensors sub to x pos check
     mov cx, playerX
     mov dx, playerY
@@ -1417,9 +1371,7 @@ checkPlayerCollisions PROC
     je checkPlayerCollisionsEnd ;Collision detected
     
     checkPlayerCollisionsEnd:
-    pop di
-    pop dx
-    pop cx
+    pop di dx cx
     RET
 checkPlayerCollisions ENDP
 
@@ -1427,7 +1379,7 @@ checkPlayerCollisions ENDP
 ;Return boolean isCollided in DH
 handlePlayerCollisions PROC
     ;DI is parameter = position to handle
-    mov dh, 0 ;Assume not collided
+    xor dh, dh ;0 -> Assume not collided
     
     ;Check for enemy collision
     cmp byte ptr es:[di], blueEnemyColor
@@ -1440,7 +1392,7 @@ handlePlayerCollisions PROC
     ;Enemy collision:
     ;Reset blue enemy
     playerCollisionBlueEnemy:
-        mov bx, 0
+        xor bx, bx ;BX = 0
         jmp playerCollisionEnemy
     playerCollisionYellowEnemy:
         mov bx, 1
@@ -1460,9 +1412,7 @@ handlePlayerCollisions ENDP
 
 decPlayerHP PROC
     ;There are 2 checks for player death to erase last heart
-    push ax
-    push cx
-    push dx
+    push ax cx dx
 
     dec playerHP
     cmp playerHP, 0
@@ -1482,9 +1432,7 @@ decPlayerHP PROC
     call drawHeart
     
     decPlayerHPEnd:
-    pop dx
-    pop cx
-    pop ax
+    pop dx cx ax
     RET
 decPlayerHP ENDP
 
@@ -1494,7 +1442,7 @@ decPlayerHP ENDP
 
 initPlayerShot PROC
     ;Determine which shot to work on
-    mov bx, 0 ;Holds current shot
+    xor bx, bx ;Holds current shot
     
     checkPlayerShots:
         mov ax, playerShots.max
@@ -1525,10 +1473,7 @@ initPlayerShot ENDP
 
 ;Param BX holds current shot index
 drawPlayerShot PROC
-    push bx
-    push cx
-    push dx
-    push di
+    push bx cx dx di
     
     ;Get drawing position
     mov cx, playerShots.xArr[bx]
@@ -1567,10 +1512,7 @@ drawPlayerShot PROC
         add di, windowWidth - playerShotWidth + 7 ;Next row
         loop drawPlayerShotRows
 
-    pop di
-    pop dx
-    pop cx
-    pop bx
+    pop di dx cx bx
     RET
 drawPlayerShot ENDP
 
@@ -1622,10 +1564,9 @@ movePlayerShots ENDP
 ;Param BX holds current shot index
 ;Return in DH, 1 if collision else 0
 playerShotCollisions PROC
-    push bx
-    push cx
+    push bx cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, playerShots.xArr[bx]
@@ -1656,7 +1597,7 @@ playerShotCollisions PROC
     jmp playerShotCollisionsEnd ;No collisions
     
     playerShotCollisionBlueEnemy:
-        mov bx, 0
+        xor bx, bx
         jmp playerShotCollisionEnemy
     playerShotCollisionYellowEnemy:
         mov bx, 1
@@ -1684,8 +1625,7 @@ playerShotCollisions PROC
     
     playerShotCollisionsEnd:
     ;No collision - DH is already 0
-    pop cx
-    pop bx
+    pop cx bx
     RET
 playerShotCollisions ENDP
 
@@ -1708,13 +1648,11 @@ handleEnemies ENDP
 
 
 drawBlueEnemy PROC
-    push bx
-    push cx
-    push dx
+    push bx cx dx
     
     mov cx, allEnemies[0].x
     ;Move to DX
-    mov dh, 0
+    xor dh, dh
     mov dl, allEnemies[0].y
     call getPosition
     mov bx, di ;Save anchor point
@@ -1992,21 +1930,17 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     
-    pop dx
-    pop cx
-    pop bx
+    pop dx cx bx
     RET
 drawBlueEnemy ENDP
 
 
 drawYellowEnemy PROC
-    push bx
-    push cx
-    push dx
+    push bx cx dx
     
     mov cx, allEnemies[1].x
     ;Move to DX
-    mov dh, 0
+    xor dh, dh
     mov dl, allEnemies[1].y
     call getPosition
     mov bx, di ;Save anchor point
@@ -2242,9 +2176,7 @@ drawYellowEnemy PROC
     add di, windowWidth - 5
     DRAW_HORIZONTAL 2
 
-    pop dx
-    pop cx
-    pop bx
+    pop dx cx bx
     RET
 drawYellowEnemy ENDP
 
@@ -2390,7 +2322,7 @@ fireEnemyShot ENDP
 initBlueEnemyShot PROC
     push si
     ;Determine which shot to work on
-    mov si, 0 ;Current shot
+    xor si, si ;0 = Current shot
     mov ax, blueEnemyShots.max
     dec ax ;Can't do in 1 line
     checkBlueEnemyShots:
@@ -2406,7 +2338,7 @@ initBlueEnemyShot PROC
     setBlueEnemyShot:
     mov ax, (blueEnemyHeight - enemyShotHeight) / 2
     ;Move to CX
-    mov ch, 0
+    xor cx, cx
     mov cl, allEnemies[0].y
     add ax, cx
 
@@ -2427,9 +2359,7 @@ initBlueEnemyShot ENDP
 
 ;Param SI holds current shot index
 drawBlueEnemyShot PROC
-    push bx
-    push cx
-    push dx
+    push bx cx dx
     
     ;Get drawing position
     mov cx, blueEnemyShots.xArr[si]
@@ -2470,9 +2400,7 @@ drawBlueEnemyShot PROC
         inc bx ;Get next color
         loop blueEnemyShotsTrails
 
-    pop dx
-    pop cx
-    pop bx
+    pop dx cx bx
     RET
 drawBlueEnemyShot ENDP
 
@@ -2527,7 +2455,7 @@ moveBlueEnemyShots ENDP
 blueEnemyShotCollisions PROC
     push cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, blueEnemyShots.xArr[si]
@@ -2580,7 +2508,7 @@ blueEnemyShotCollisions ENDP
 initYellowEnemyShot PROC
     push si
     ;Determine which shot to work on
-    mov si, 0 ;Current shot
+    xor si, si ;0 = Current shot
     mov ax, yellowEnemyShots.max
     dec ax ;Can't do in 1 line
     checkYellowEnemyShots:
@@ -2596,7 +2524,7 @@ initYellowEnemyShot PROC
     setYellowEnemyShot:
     mov ax, (yellowEnemyHeight - enemyShotHeight) / 2
     ;Move to CX
-    mov ch, 0
+    xor cx, cx
     mov cl, allEnemies[1].y
     add ax, cx
 
@@ -2617,9 +2545,7 @@ initYellowEnemyShot ENDP
 
 ;Param SI holds current shot index
 drawYellowEnemyShot PROC
-    push bx
-    push cx
-    push dx
+    push bx cx dx
     
     ;Get drawing position
     mov cx, yellowEnemyShots.xArr[si]
@@ -2660,9 +2586,7 @@ drawYellowEnemyShot PROC
         inc bx ;Get next color
         loop yellowEnemyShotsTrails
 
-    pop dx
-    pop cx
-    pop bx
+    pop dx cx bx
     RET
 drawYellowEnemyShot ENDP
 
@@ -2717,7 +2641,7 @@ moveYellowEnemyShots ENDP
 yellowEnemyShotCollisions PROC
     push cx
     ;Assume no collision
-    mov dh, 0
+    xor dh, dh
     
     ;Calculates pos of front to DI
     mov cx, yellowEnemyShots.xArr[si]
@@ -3044,7 +2968,7 @@ initShop PROC
 
     mov playerShots.xArr[0], 130
     mov playerShots.yArr[0], 194
-    mov bx, 0
+    xor bx, bx
     call drawPlayerShot
 
     RET
@@ -3052,24 +2976,19 @@ initShop ENDP
 
 
 drawPlus PROC
-    push cx
-    push dx
-    push di
+    push cx dx di
     mov dl, 2
     add di, 3
     DRAW_VERTICAL 7
     sub di, windowWidth*3 + 3
     DRAW_HORIZONTAL 7
-    pop di
-    pop dx
-    pop cx
+    pop di dx cx
     RET
 drawPlus ENDP
 
 
 buyShots PROC
-    push ax
-    push bx
+    push ax bx
     
     mov bx, playerShots.max
     
@@ -3078,7 +2997,7 @@ buyShots PROC
     jge buyShotsEnd
 
     ;Move to AX
-    mov ah, 0
+    xor ax, ax
     mov al, shotPrices[bx - 1] ;1 is initial real max
     cmp playerScore, ax
     jl buyShotsEnd
@@ -3089,8 +3008,7 @@ buyShots PROC
     inc playerShots.max
     
     buyShotsEnd:
-    pop bx
-    pop ax
+    pop bx ax
     RET
 buyShots ENDP
 
