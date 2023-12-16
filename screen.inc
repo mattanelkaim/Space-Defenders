@@ -16,7 +16,6 @@ horizontalLine PROC
         inc di
         loop drawHorizontal
     dec di ;Last iteration doesn't draw
-    
     RET
 horizontalLine ENDP
 
@@ -24,7 +23,6 @@ horizontalLine ENDP
 DRAW_HORIZONTAL MACRO len:REQ
     mov cx, len
     call horizontalLine
-    rep
 ENDM
 
 verticalLine PROC
@@ -34,7 +32,6 @@ verticalLine PROC
         add di, windowWidth
         loop drawVertical
     sub di, windowWidth ;Last iteration doesn't draw
-    
     RET
 verticalLine ENDP
 
