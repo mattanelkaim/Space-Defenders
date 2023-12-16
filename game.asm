@@ -1,10 +1,10 @@
 ;NOTES:
 ;Anchor tile is at top-left (0,0)
+;Max score = 9999
 ;Colors are from mode 13h VGA color palette
 ;DL/DX are affected by mul & div!
 ;XOR x, x resets x
 ;byte ptr to indicate byte-sized operand
-;Procs are grouped to sections
 include screen.inc
 include digits.inc
 
@@ -60,17 +60,17 @@ playerX equ 20
 playerY dw 0
 playerWidth equ 31
 playerHeight equ 21
-playerColors db 18h, 1Bh ;Outer colors
+playerColors db 18h, 1Bh  ;Outer colors
 
 ;Player stats variables
 playerVelocity equ 5
 playerHP dw 3
-playerScore dw 0       ;Max 2559 (drawScore limit)
+playerScore dw 0          ;Max 9999
 
 ;Player shots variables
 playerShots shots {max=1} ;Upgradable
 playerShotWidth equ 10
-playerShotHeight equ 2 ;Do NOT change!
+playerShotHeight equ 2    ;Do NOT change!
 playerShotFrontColor equ 34h
 playerShotTrailColors db 20h, 37h, 36h
 
@@ -83,7 +83,7 @@ enemyShotWidth equ 10
 enemyShotHeight equ 2  ;Max = max(enemyHeights)
 numOfEnemies equ 2
 allEnemies dq numOfEnemies dup(enemy) ;Blue, yellow
-currentEnemy dw 0 ;0=blue, 1=yellow
+currentEnemy dw 0      ;0=blue, 1=yellow
 
 ;Blue enemy variables
 blueEnemyWidth equ 23
