@@ -9,6 +9,8 @@ MODEL small
 STACK 100h
 DATASEG
 
+jmp main ;data & procs are compiled, no need to run them
+
 enemy STRUC
     ;Must stay 8 bytes long
     x dw ?
@@ -23,20 +25,20 @@ realMaxShots equ 5
 shots STRUC
     xArr dw realMaxShots dup(0)
     yArr dw realMaxShots dup(0)
-    max dw ?        ;Actual current max = max/2, shots are arrays
+    max dw ?        ;Actual current max = max/2, shots are dw arrays
     trailColors db 3 dup(?)
 shots ENDS
 
 ;Window variables
 windowHeight equ 200
 windowWidth equ 320
-delayTime dw 8334   ;Microsonds
+delayTime dw 8334        ;Microsonds
 accelerationCounter dw 0
 accelerationRate equ 600 ;600f/120fps = 5secs
 minDelay equ 4167
 
 ;Border & bg variables
-drawOrErase db 0
+drawOrErase db ?
 borderWidth equ 1   ;Do NOT change!
 borderColor equ 13h ;MUST BE UNIQUE
 bgColor equ 11h
