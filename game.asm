@@ -5,9 +5,9 @@
 ;XOR x, x resets x
 ;byte ptr to indicate byte-sized operand
 ;Procs are grouped to sections
-.model small
-.stack 100h
-.data
+MODEL small
+STACK 100h
+DATASEG
 
 enemy STRUC
     ;Must stay 8 bytes long
@@ -101,7 +101,7 @@ yellowEnemyShotTrailColors db 2Bh, 2Ah, 29h
 ;Shop variables
 shotPrices db 10, 15, 20, 25
 
-.code
+CODESEG
 
 ;----------------------------------------------------MACROS DEFINITION-----------------------------------------------------------------------------------------------------------------
 
