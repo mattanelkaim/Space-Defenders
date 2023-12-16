@@ -6,6 +6,7 @@
 ;XOR x, x resets x
 ;byte ptr to indicate byte-sized operand
 include screen.inc
+include utils.inc
 include digits.inc
 include letters.inc
 
@@ -32,29 +33,6 @@ shots STRUC
     max dw ?        ;Actual current max = max/2, shots are dw arrays
     trailColors db 3 dup(?)
 shots ENDS
-
-;Window variables
-delayTime dw 8334        ;Microseconds
-accelerationCounter dw 0
-accelerationRate equ 600 ;600f/120fps = 5secs
-minDelay equ 4167
-
-;Border & bg variables
-drawOrErase db ?
-borderWidth equ 1   ;Do NOT change!
-borderColor equ 13h ;MUST BE UNIQUE
-bgColor equ 11h
-starsColor equ 1Ch  ;MUST BE UNIQUE
-starsPositions dw 970,   1811,  1856,  2459,  2864,  3447,  3459,  3692,  4770,  6150
-               dw 6162,  6302,  6666,  7138,  7550,  10654, 11967, 12734, 12812, 13033
-               dw 13432, 13977, 15074, 15805, 16175, 16739, 17083, 17826, 18240, 18474
-               dw 20408, 20862, 21051, 21111, 21476, 22250, 23842, 23844, 23881, 24373
-               dw 25046, 26216, 26840, 28344, 29155, 29583, 29678, 31531, 31728, 32122
-               dw 33119, 33356, 34606, 35269, 36466, 36846, 37896, 38219, 38893, 39385
-               dw 39496, 40473, 40758, 40853, 40982, 42045, 42685, 44010, 44509, 45073
-               dw 45347, 45512, 46469, 47674, 47945, 48779, 49515, 49699, 51889, 51958
-               dw 52456, 54510, 54517, 55100, 55453, 55810, 56660, 56879, 57702, 57780
-               dw 57817, 57944, 58068, 58073, 59952, 60521, 61700, 62686, 63088, 63348
 
 ;Player variables
 playerX equ 20
@@ -108,47 +86,6 @@ shotPrices db 10, 15, 20, 25
 CODESEG
 
 ;--------------------------------------------------GLOBALS AND INITS-------------------------------------------------------------------------------------------------------------------
-
-
-getPosition PROC
-    ;X POS IN CX, Y POS IN DX, RETURNS POS IN DI
-    push ax
-    
-    mov ax, windowWidth
-    mul dx
-    add ax, cx
-    mov di, ax
-    
-    pop ax
-    RET
-getPosition ENDP
-
-
-randomize PROC
-    ;Randomizes between range in BL(min) -> BH(max)
-    ;Returns number in DX
-    xor ah, ah
-    int 1Ah    ;Randomize number (up to 65355) to CX:DX
-    
-    ;Calc modulu divider: max - min + 1
-    sub bh, bl
-    inc bh
-
-    ;Move minimum to CX
-    xor ch, ch
-    mov cl, bl ;Store minimum
-
-    ;Move BH to BX
-    mov bl, bh
-    xor bh, bh
-
-    mov ax, dx ;DX holds randomized num
-    xor dx, dx ;Reset for div instruction
-    div bx     ;Modulu to get remainder (in DX)
-
-    add dx, cx ;Add minimum, now stores final randomized
-    RET
-randomize ENDP
 
 
 initializeGraphics PROC
@@ -214,11 +151,11 @@ welcomeScreen ENDP
 
 
 welcomeScreenName PROC
-    mov dl, 0Fh
     mov cx, 95
     mov dx, 60
-
     call getPosition ;To DI
+
+    mov dl, 0Fh
     mov bx, di       ;Save anchor
     call drawS
 
@@ -363,36 +300,6 @@ handleGameInput PROC
 handleGameInput ENDP
 
 
-delay PROC
-    ;Delay 8.334 ms between each frame = 120hz
-    xor cx, cx
-    mov dx, delayTime
-    mov ah, 86h ;Delays by CX:DX microseconds
-    int 15h
-    RET
-delay ENDP
-
-
-accelerateGame PROC
-    cmp delayTime, minDelay
-    jbe accelerateGameEnd
-
-    cmp accelerationCounter, accelerationRate
-    jge validToAccelerate
-
-    ;Not valid to accelerate
-    inc accelerationCounter
-    jmp accelerateGameEnd
-    
-    validToAccelerate:
-        mov accelerationCounter, 0
-        sub delayTime, 150
-
-    accelerateGameEnd:
-    RET
-accelerateGame ENDP
-
-
 initPlayer PROC
     ;x is constant
     mov playerY, (windowHeight - playerHeight) / 2
@@ -443,63 +350,6 @@ initEnemy PROC
     pop dx
     RET
 initEnemy ENDP
-
-
-cls PROC
-    push cx di
-
-    xor di, di
-    mov cx, windowWidth*windowHeight
-    clsLoop:
-        inc di
-        mov byte ptr es:[di], bgColor
-        loop clsLoop
-    
-    pop di cx
-    RET
-cls ENDP
-
-
-drawBorder PROC
-    push cx dx di
-    mov dl, borderColor
-
-    xor di, di
-    DRAW_HORIZONTAL windowWidth ;Top
-    
-    xor di, di
-    DRAW_VERTICAL windowHeight  ;Left
-    
-    mov di, (windowHeight - 1)*windowWidth ;(index)
-    DRAW_HORIZONTAL windowWidth ;Bottom
-    
-    mov di, windowWidth - 1     ;(index)
-    DRAW_VERTICAL windowHeight  ;Right
-    
-    pop di dx cx
-    RET
-drawBorder ENDP
-
-
-drawStars PROC
-    push bx cx dx di
-    
-    mov dl, starsColor
-    lea bx, starsPositions
-    mov cx, 100 ;Num of stars
-    drawStarsLoop:
-        mov di, [bx]
-        cmp byte ptr es:[di], bgColor  ;If star is not in background
-        jne drawNextStar ;Skip drawing
-        
-        mov es:[di], dl  ;Draw star
-        drawNextStar:
-        add bx, 2
-        loop drawStarsLoop
-    
-    pop di dx cx bx
-    RET
-drawStars ENDP
 
 
 drawCoin PROC
