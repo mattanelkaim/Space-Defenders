@@ -1,6 +1,5 @@
 ifndef DIGITS ;Ensure only 1 compilation, like #pragma once
 DIGITS equ 1
-include screen.inc
 
 digitsProcsTable dw draw0, draw1, draw2, draw3, draw4, draw5, draw6, draw7, draw8, draw9
 maxScore equ 9999
