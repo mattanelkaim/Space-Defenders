@@ -1,5 +1,7 @@
 ifndef PLAYER
 PLAYER equ 1
+include draw.inc
+include utils.inc
 
 playerX equ 20
 playerY dw 0
@@ -397,7 +399,5 @@ handlePlayerCollisions PROC
     handlePlayerCollisionsEnd:
     RET
 handlePlayerCollisions ENDP
-
-
 
 endif

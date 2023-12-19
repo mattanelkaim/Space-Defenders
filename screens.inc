@@ -1,5 +1,9 @@
 ifndef SCREENS
 SCREENS equ 1
+include draw.inc
+include utils.inc
+include letters.inc
+include player.inc
 
 ;#################### WELCOME SCREEN ####################
 

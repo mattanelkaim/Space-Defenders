@@ -1,6 +1,9 @@
 ifndef GUI
 GUI equ 1
-
+include draw.inc
+include utils.inc
+include digits.inc
+include player.inc
 include screens.inc
 
 ;Player stats

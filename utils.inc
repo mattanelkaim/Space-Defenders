@@ -1,10 +1,12 @@
 ifndef UTILS
 UTILS equ 1
+include draw.inc
 
 delayTime dw 8334        ;Microseconds
 accelerationCounter dw 0
 accelerationRate equ 600 ;600f/120fps = 5secs
 minDelay equ 4167
+
 
 getPosition PROC
     ;X POS IN CX, Y POS IN DX, RETURNS POS IN DI
@@ -18,6 +20,7 @@ getPosition PROC
     pop ax
     RET
 getPosition ENDP
+
 
 randomize PROC
     ;Randomizes between range in BL(min) -> BH(max)
@@ -45,6 +48,7 @@ randomize PROC
     RET
 randomize ENDP
 
+
 delay PROC
     ;Delay 8.334 ms between each frame = 120hz
     xor cx, cx
@@ -53,6 +57,7 @@ delay PROC
     int 15h
     RET
 delay ENDP
+
 
 accelerateGame PROC
     cmp delayTime, minDelay

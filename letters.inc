@@ -1,5 +1,6 @@
 ifndef LETTERS
 LETTERS equ 1
+include draw.inc
 
 drawA PROC
     DRAW_HORIZONTAL 16

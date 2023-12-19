@@ -5,12 +5,13 @@
 ;DL/DX are affected by mul & div!
 ;XOR x, x resets x
 ;byte ptr to indicate byte-sized operand
+;Order of includes matters
 include draw.inc
 include utils.inc
 include digits.inc
 include letters.inc
-include gui.inc
 include player.inc
+include gui.inc
 
 MODEL small
 STACK 100h
