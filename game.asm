@@ -5,10 +5,11 @@
 ;DL/DX are affected by mul & div!
 ;XOR x, x resets x
 ;byte ptr to indicate byte-sized operand
-include screen.inc
+include draw.inc
 include utils.inc
 include digits.inc
 include letters.inc
+include gui.inc
 
 MODEL small
 STACK 100h
@@ -40,11 +41,7 @@ playerY dw 0
 playerWidth equ 31
 playerHeight equ 21
 playerColors db 18h, 1Bh  ;Outer colors
-
-;Player stats variables
 playerVelocity equ 5
-playerHP dw 3
-playerScore dw 0          ;Max 9999
 
 ;Player shots variables
 playerShots shots {max=1} ;Upgradable
@@ -80,134 +77,9 @@ yellowEnemyShots shots {max=4}
 yellowEnemyShotFrontColor equ 2Ch ;Can join to 1 array
 yellowEnemyShotTrailColors db 2Bh, 2Ah, 29h
 
-;Shop variables
-shotPrices db 10, 15, 20, 25
-
 CODESEG
 
 ;--------------------------------------------------GLOBALS AND INITS-------------------------------------------------------------------------------------------------------------------
-
-
-initializeGraphics PROC
-    mov ax, 13h    ;Set graphic mode = 320 * 200
-    int 10h
-    mov ax, 0A000h ;Pointer of video memory
-    mov es, ax     ;Can't move directly to ES
-    call cls
-    RET
-initializeGraphics ENDP
-
-
-welcomeScreen PROC
-    push si
-    mov drawOrErase, 1
-
-    ;Player & shots
-    mov playerY, 140
-    call drawPlayer
-    mov playerShots.xArr[0], 65
-    mov playerShots.yArr[0], 148
-    xor bx, bx
-    call drawPlayerShot
-    mov playerShots.xArr[1], 115
-    mov playerShots.yArr[1], 151
-    inc bx
-    call drawPlayerShot
-    mov playerShots.xArr[2], 150
-    mov playerShots.yArr[2], 149
-    inc bx
-    call drawPlayerShot
-    
-    ;Blue enemy & shots
-    mov allEnemies[0].x, 250
-    mov allEnemies[0].y, 30
-    call drawBlueEnemy
-    mov blueEnemyShots.xArr[0], 200
-    mov blueEnemyShots.yArr[0], 40
-    xor si, si ;SI = 0
-    call drawBlueEnemyShot
-    mov blueEnemyShots.xArr[1], 100
-    mov blueEnemyShots.yArr[1], 42
-    inc si     ;SI = 1
-    call drawBlueEnemyShot
-
-    ;Yellow enemy & shots
-    mov allEnemies[1].x, 200
-    mov allEnemies[1].y, 140
-    call drawYellowEnemy
-    mov yellowEnemyShots.xArr[0], 175
-    mov yellowEnemyShots.yArr[0], 148
-    xor si, si
-    call drawYellowEnemyShot
-
-    call welcomeScreenName
-    ;Wait for player input
-    mov ah, 7
-    int 21h
-    call cls
-    pop si
-    RET
-welcomeScreen ENDP
-
-
-welcomeScreenName PROC
-    mov cx, 95
-    mov dx, 60
-    call getPosition ;To DI
-
-    mov dl, 0Fh
-    mov bx, di       ;Save anchor
-    call drawS
-
-    add bx, 29
-    mov di, bx
-    call drawP
-
-    add bx, 27
-    mov di, bx
-    call drawA
-
-    add bx, 29
-    mov di, bx
-    call drawC
-
-    add bx, 29
-    mov di, bx
-    call drawE
-    
-    add bx, windowWidth*35 - 155
-    mov di, bx
-    call drawS
-    
-    add bx, 29
-    mov di, bx
-    call drawH
-
-    add bx, 29
-    mov di, bx
-    call drawO
-
-    add bx, 29
-    mov di, bx
-    call drawO
-
-    add bx, 28
-    mov di, bx
-    call drawT
-
-    add bx, 28
-    mov di, bx
-    call drawE
-
-    add bx, 29
-    mov di, bx
-    call drawR
-
-    add bx, 29
-    mov di, bx
-    call drawS
-    RET
-welcomeScreenName ENDP
 
 
 initializeGame PROC
@@ -350,161 +222,6 @@ initEnemy PROC
     pop dx
     RET
 initEnemy ENDP
-
-
-drawCoin PROC
-    push bx cx dx di
-    
-    mov bx, 462    ;Anchor point
-    
-    ;Outer line
-    mov dl, 2Bh    ;Light orange
-    mov di, bx
-    add di, 2
-    DRAW_HORIZONTAL 5
-    add di, windowWidth + 1
-    mov es:[di], dl
-    add di, windowWidth + 1
-    DRAW_VERTICAL 5
-    add di, windowWidth - 1
-    mov es:[di], dl
-    add di, windowWidth - 5
-    DRAW_HORIZONTAL 5
-    sub di, windowWidth + 5
-    mov es:[di], dl
-    sub di, windowWidth*6
-    mov es:[di], dl
-    add di, windowWidth - 1
-    DRAW_VERTICAL 5
-    
-    ;Inner part
-    mov dl, 0Eh ;Light yellow
-    mov di, bx
-    add di, windowWidth + 2
-    DRAW_HORIZONTAL 5
-    add di, windowWidth - 5
-    mov cx, 5
-    drawCoinInnerLoop:
-        push cx
-        DRAW_HORIZONTAL 7
-        pop cx
-        add di, windowWidth - 6
-        loop drawCoinInnerLoop
-    inc di
-    DRAW_HORIZONTAL 5
-    
-    ;Coin shine
-    mov dl, 0Fh ;White
-    mov di, bx
-    add di, windowWidth*2 + 3
-    mov es:[di], dl
-    add di, windowWidth - 1
-    mov es:[di], dl
-    
-    pop di dx cx bx
-    RET
-drawCoin ENDP
-
-
-drawHeart PROC
-    ;DI holds position
-    push cx dx di
-    
-    mov dl, 4       ;Dark red
-    cmp drawOrErase, 1
-    je drawHeartOuter
-    mov dl, bgColor ;Erase
-    
-    drawHeartOuter:
-    add di, 2
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
-    add di, 4
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
-    add di, windowWidth + 1
-    mov es:[di], dl
-    sub di, 3
-    mov es:[di], dl
-    sub di, 2
-    mov es:[di], dl
-    sub di, 3
-    mov es:[di], dl
-    add di, windowWidth - 1
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
-    sub di, windowWidth - 5
-    mov es:[di], dl
-    add di, 5
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
-    mov cx, 5
-    outerHeartLoop1:
-        add di, windowWidth - 1
-        mov es:[di], dl
-        loop outerHeartLoop1
-    mov cx, 4
-    outerHeartLoop2:
-        sub di, windowWidth + 1
-        mov es:[di], dl
-        loop outerHeartLoop2
-    
-    mov dl, 28h     ;Light red
-    cmp drawOrErase, 1
-    je drawHeartInner
-    mov dl, bgColor ;Erase
-    
-    drawHeartInner:
-    sub di, windowWidth*3 - 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
-    add di, 4
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
-    add di, windowWidth - 7
-    DRAW_HORIZONTAL 4
-    add di, 2
-    DRAW_HORIZONTAL 4
-    add di, windowWidth - 8
-    DRAW_HORIZONTAL 9
-    add di, windowWidth - 7
-    DRAW_HORIZONTAL 7
-    add di, windowWidth - 5
-    DRAW_HORIZONTAL 5
-    add di, windowWidth - 3
-    DRAW_HORIZONTAL 3
-    add di, windowWidth - 1
-    mov es:[di], dl
-    
-    pop di dx cx
-    RET
-drawHeart ENDP
-
-
-;Called once to initialize GUI
-drawPlayerHP PROC
-    push cx dx di
-    ;Heart size is 11*9
-    mov cx, windowWidth - 14 ;X value
-    mov dx, 1                ;Y value
-    call getPosition
-    
-    mov drawOrErase, 1
-    mov cx, playerHP
-    drawPlayerHPLoop:
-        call drawHeart
-        sub di, 14 ;Space for next heart
-        loop drawPlayerHPLoop
-    
-    pop di dx cx
-    RET
-drawPlayerHP ENDP
 
 
 ;--------------------------------------------------PLAYER------------------------------------------------------------------------------------------------------------------------------
@@ -2173,112 +1890,6 @@ yellowEnemyShotCollisions PROC
     pop cx
     RET
 yellowEnemyShotCollisions ENDP
-
-
-;--------------------------------------------------DEATH SCREEN------------------------------------------------------------------------------------------------------------------------
-
-
-printDeathScreen PROC
-    call cls
-    mov dl, 0Fh
-    ;Letters are 16*24
-    
-    mov bx, windowWidth*48 + 100
-    mov di, bx
-    call drawG
-    
-    add bx, 29
-    mov di, bx
-    call drawA
-    
-    add bx, 29
-    mov di, bx
-    call drawM
-    
-    add bx, 29
-    mov di, bx
-    call drawE
-    
-    add bx, windowWidth*37 - 87
-    mov di, bx
-    call drawO
-    
-    add bx, 29
-    mov di, bx
-    call drawV
-    
-    add bx, 29
-    mov di, bx
-    call drawE
-    
-    add bx, 29
-    mov di, bx
-    call drawR
-    RET
-printDeathScreen ENDP
-
-
-;--------------------------------------------------SHOP---------------------------------------------------------------------------------------------------------------------------------
-
-
-initShop PROC
-    ;Shop border
-    mov dl, borderColor
-    mov di, windowWidth*189 + 80
-    DRAW_VERTICAL 10
-    mov di, windowWidth*189 + 240
-    DRAW_VERTICAL 10
-    mov di, windowWidth*189 + 81
-    DRAW_HORIZONTAL 159
-
-    mov di, windowWidth*191 + 120
-    call drawPlus
-
-    mov playerShots.xArr[0], 130
-    mov playerShots.yArr[0], 194
-    xor bx, bx ;Draw first shot
-    call drawPlayerShot
-
-    RET
-initShop ENDP
-
-
-drawPlus PROC
-    push cx dx di
-    mov dl, 2
-    add di, 3
-    DRAW_VERTICAL 7
-    sub di, windowWidth*3 + 3
-    DRAW_HORIZONTAL 7
-    pop di dx cx
-    RET
-drawPlus ENDP
-
-
-buyShots PROC
-    push ax bx
-    
-    mov bx, playerShots.max
-    
-    ;Can extend max shots?
-    cmp bx, realMaxShots
-    jge buyShotsEnd
-
-    ;Move to AX
-    xor ax, ax
-    mov al, shotPrices[bx - 1] ;1 is initial real max
-    cmp playerScore, ax
-    jl buyShotsEnd
-
-    ;Buy new shot
-    sub playerScore, ax
-    call drawScore
-    inc playerShots.max
-    
-    buyShotsEnd:
-    pop bx ax
-    RET
-buyShots ENDP
 
 
 ;----------------------------------------------------------------------------------------------------------------------------
