@@ -1,7 +1,7 @@
 ifndef SCREENS
 SCREENS equ 1
 
-;--------------------------------------------------WELCOME SCREEN------------------------------------------------------------------------------------------------------------------------
+;#################### WELCOME SCREEN ####################
 
 welcomeScreen PROC
     push si
@@ -50,6 +50,7 @@ welcomeScreen PROC
     mov ah, 7
     int 21h
     call cls
+    
     pop si
     RET
 welcomeScreen ENDP
@@ -115,7 +116,7 @@ welcomeScreenName PROC
 welcomeScreenName ENDP
 
 
-;--------------------------------------------------DEATH SCREEN------------------------------------------------------------------------------------------------------------------------
+;#################### DEATH SCREEN ####################
 
 printDeathScreen PROC
     call cls
