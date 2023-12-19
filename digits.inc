@@ -31,7 +31,7 @@ GET_POWER_OF_10 MACRO num:REQ
     call calcPowerOf10
 ENDM
 
-;#################### DRAW SCORE ####################
+;#################### HANDLE DIGIT ####################
 
 drawDigit PROC
     ;Digit to draw in BX
@@ -53,60 +53,6 @@ DRAW_DIGIT MACRO digit:REQ
     call drawDigit
     pop bx
 ENDM
-
-drawScore PROC
-    push ax bx cx dx di
-    cmp playerScore, maxScore
-    jbe drawValidScore
-    
-    ;Set to max valid score
-    mov playerScore, maxScore
-    jmp drawScoreEnd
-
-    drawValidScore:
-    call deleteScore  ;Delete last score
-    GET_POWER_OF_10 playerScore ;To CX
-    mov di, 794    ;Position of score
-    mov bl, 10     ;Const of divisor
-    drawScoreLoop:
-        xor dx, dx ;Div by word, DX should be 0
-        div cx     ;AX = quotient, DX = remainder
-        
-        DRAW_DIGIT al
-        add di, 7
-        
-        ;Divisor CX /= 10
-        mov ax, cx
-        div bl     ;10
-        xor ch, ch
-        mov cl, al ;Update CX
-        
-        mov ax, dx ;Save remainder for next iteration
-        cmp cx, 0  ;Check divisor
-        jne drawScoreLoop
-    
-    drawScoreEnd:
-    pop di dx cx bx ax
-    RET
-drawScore ENDP
-
-deleteScore PROC
-    push cx dx di
-    
-    mov dl, bgColor ;Color
-    mov di, 794
-    
-    mov cx, 7       ;Height of digits
-    deleteScoreLoop:
-        push cx
-        DRAW_HORIZONTAL 5*7 ;Width to delete (maxDigits*digitWidth)
-        pop cx
-        add di, windowWidth - 34
-        loop deleteScoreLoop
-    
-    pop di dx cx
-    RET
-deleteScore ENDP
 
 ;#################### DRAW DIGITS ####################
 
