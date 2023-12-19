@@ -105,6 +105,33 @@ drawPlayerHP PROC
 drawPlayerHP ENDP
 
 
+decPlayerHP PROC
+    ;There are 2 checks for player death to erase last heart
+    push ax cx dx
+
+    dec playerHP
+    ;cmp playerHP, 0
+    jl decPlayerHPEnd ;No hearts to erase
+    
+    ;Get x value of heart to erase
+    ;CX = (windowWidth - 14) - 14*playerHP
+    mov cx, windowWidth - 14
+    mov ax, 14
+    mul playerHP
+    sub cx, ax ;Holds x position
+    
+    mov dx, 1  ;Y position
+    call getPosition
+    
+    mov drawOrErase, 0 ;Erase
+    call drawHeart
+    
+    decPlayerHPEnd:
+    pop dx cx ax
+    RET
+decPlayerHP ENDP
+
+
 ;#################### SCORE ####################
 
 drawScore PROC
