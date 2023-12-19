@@ -1,5 +1,5 @@
-ifndef SCREEN ;Ensure only 1 compilation, like #pragma once
-SCREEN equ 1
+ifndef DRAW ;Ensure only 1 compilation, like #pragma once
+DRAW equ 1
 
 MODEL small
 DATASEG
@@ -22,7 +22,19 @@ starsPositions dw 970,   1811,  1856,  2459,  2864,  3447,  3459,  3692,  4770, 
                dw 57817, 57944, 58068, 58073, 59952, 60521, 61700, 62686, 63088, 63348
 drawOrErase db ?
 
+
 CODESEG
+
+
+initializeGraphics PROC
+    mov ax, 13h    ;Set graphic mode = 320 * 200
+    int 10h
+    mov ax, 0A000h ;Pointer of video memory
+    mov es, ax     ;Can't move directly to ES
+    call cls
+    RET
+initializeGraphics ENDP
+
 
 horizontalLine PROC
     ;Position is in DI, color is in DL, length is in CX
@@ -39,6 +51,7 @@ DRAW_HORIZONTAL MACRO len:REQ
     mov cx, len
     call horizontalLine
 ENDM
+
 
 verticalLine PROC
     ;Position is in DI, color is in DL, length is in CX
@@ -57,7 +70,6 @@ DRAW_VERTICAL MACRO len:REQ
 ENDM
 
 
-
 cls PROC
     push cx di
 
@@ -71,6 +83,7 @@ cls PROC
     pop di cx
     RET
 cls ENDP
+
 
 drawBorder PROC
     push cx dx di
@@ -91,6 +104,7 @@ drawBorder PROC
     pop di dx cx
     RET
 drawBorder ENDP
+
 
 drawStars PROC
     push bx cx dx di
