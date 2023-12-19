@@ -73,12 +73,11 @@ ENDM
 cls PROC
     push cx di
 
-    xor di, di
-    mov cx, windowWidth*windowHeight
+    mov di, windowWidth*windowHeight
     clsLoop:
-        inc di
+        dec di
         mov byte ptr es:[di], bgColor
-        loop clsLoop
+        ja clsLoop
     
     pop di cx
     RET
@@ -92,14 +91,13 @@ drawBorder PROC
     xor di, di
     DRAW_HORIZONTAL windowWidth ;Top
     
-    xor di, di
-    DRAW_VERTICAL windowHeight  ;Left
+    add di, windowWidth
+    DRAW_VERTICAL windowHeight-2  ;Right
     
-    mov di, (windowHeight - 1)*windowWidth ;(index)
+    mov di, windowWidth
+    DRAW_VERTICAL windowHeight-1  ;Left
+    
     DRAW_HORIZONTAL windowWidth ;Bottom
-    
-    mov di, windowWidth - 1     ;(index)
-    DRAW_VERTICAL windowHeight  ;Right
     
     pop di dx cx
     RET
@@ -114,8 +112,8 @@ drawStars PROC
     mov cx, 100 ;Num of stars
     drawStarsLoop:
         mov di, [bx]
-        cmp byte ptr es:[di], bgColor  ;If star is not in background
-        jne drawNextStar ;Skip drawing
+        cmp byte ptr es:[di], bgColor ;If star is not in background
+        jne drawNextStar ;Skip drawing to avoid drawing over other objects
         
         mov es:[di], dl  ;Draw star
         drawNextStar:
