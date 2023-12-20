@@ -36,13 +36,16 @@ initializeGraphics PROC
 initializeGraphics ENDP
 
 
+;Position is in DI, color is in DL, length is in CX
 horizontalLine PROC
-    ;Position is in DI, color is in DL, length is in CX
-    drawHorizontal:
-        mov es:[di], dl
-        inc di
-        loop drawHorizontal
-    dec di ;Last iteration doesn't draw
+    push ax
+
+    cld       ;So stosb will inc di
+    mov al, dl
+    rep stosb ;mov es:[di], al && inc di, CX times
+    dec di    ;Last iteration doesn't draw
+    
+    pop ax
     RET
 horizontalLine ENDP
 
