@@ -169,21 +169,21 @@ handleGameInput ENDP
 initAllShots PROC
     ;Reset x & y values after welcome screen
     lea bx, playerShots.xArr[0]
-    mov cx, 5 ;# of real max player shots
+    mov cx, realMaxShots
     resetPlayerShots:
         mov word ptr [bx], 0
         inc bx
         loop resetPlayerShots
     
     lea bx, blueEnemyShots.xArr[0]
-    mov cx, 5
+    mov cx, realMaxShots
     resetBlueEnemyShots:
         mov word ptr [bx], 0
         inc bx
         loop resetBlueEnemyShots
     
     lea bx, yellowEnemyShots.xArr[0]
-    mov cx, 5
+    mov cx, realMaxShots
     resetYellowEnemyShots:
         mov word ptr [bx], 0
         inc bx
@@ -253,7 +253,7 @@ drawPlayerShot PROC
     mov dx, playerShots.yArr[bx]
     call getPosition
 
-    lea bx, playerShotTrailColors[0]
+    lea bx, playerShotTrailColors
     mov cx, 3 ;Num of trail colors
     playerShotsTrails:
         mov dl, [bx]
@@ -262,9 +262,9 @@ drawPlayerShot PROC
         mov dl, bgColor
         drawPlayerShotTrail:
         push cx
-        DRAW_VERTICAL 2
+        DRAW_VERTICAL playerShotHeight
         sub di, windowWidth - 1
-        DRAW_VERTICAL 2
+        DRAW_VERTICAL playerShotHeight
         sub di, windowWidth - 1
         pop cx
         inc bx ;Get next color
