@@ -215,7 +215,6 @@ drawPlayer ENDP
 
 movePlayer PROC
     ;Key pressed ASCII value is in AL | AH for BIOS code!
-    push cx
 
     cmp ah, 48h ;Up arrow
     je movePlayerUp
@@ -244,17 +243,14 @@ movePlayer PROC
         
         sub playerY, playerVelocity
         cmp playerY, borderWidth ;Has reached top?
-        jge movePlayerDraw       ;MUST BE jge and not jae, to handle signed
+        jge movePlayerDraw       ;MUST be jge and NOT jae, to handle signed
         ;Invalid y
-        mov playerY, borderWidth ;Move to highest valid position
+        mov playerY, borderWidth ;Move to max valid position
         jmp movePlayerDraw
     
     movePlayerDown:
-        ;Get max valid y, +1 to get index
-        mov cx, windowHeight - playerHeight - borderWidth*2 + 1
-
         ;Skip if in border
-        cmp playerY, cx
+        cmp playerY, windowHeight - playerHeight - borderWidth*2 + 1
         je movePlayerEnd
         
         ;Erase prev player
@@ -262,19 +258,17 @@ movePlayer PROC
         call drawPlayer
         
         add playerY, playerVelocity
-        cmp playerY, cx ;Has reached bottom?
+        ;Has reached bottom?
+        cmp playerY, windowHeight - playerHeight - borderWidth*2 + 1
         jbe movePlayerDraw
-        ;Invalid y
-        mov playerY, cx ;Move to lowest valid position
-        jmp movePlayerDraw
+        ;Invalid y - move to min valid y
+        mov playerY, windowHeight - playerHeight - borderWidth*2 + 1
     
     movePlayerDraw:
         mov drawOrErase, 1 ;Draw
         call drawPlayer
-        jmp movePlayerEnd
     
     movePlayerEnd:
-    pop cx
     RET
 movePlayer ENDP
 
