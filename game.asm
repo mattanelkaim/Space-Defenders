@@ -36,11 +36,11 @@ shots STRUC
     max dw ?        ;Actual current max = max/2, shots are dw arrays
     trailColors db 3 dup(?)
 shots ENDS
+shotWidth equ 10
+shotHeight equ 2 ;DO NOT CHANGE!
 
 ;Player shots variables
 playerShots shots {max=1} ;Upgradable
-playerShotWidth equ 10
-playerShotHeight equ 2    ;Do NOT change!
 playerShotFrontColor equ 34h
 playerShotTrailColors db 20h, 37h, 36h
 
@@ -49,8 +49,6 @@ enemyVelocity equ 2
 enemySpawnRate equ 180 ;180f/120fps = 1.5secs
 enemyMoveRate equ 16   ;16f/120fps = 0.133secs
 enemyShootRate equ 300 ;300f/120fps = 2.5secs
-enemyShotWidth equ 10
-enemyShotHeight equ 2  ;Max = max(enemyHeights)
 numOfEnemies equ 2
 allEnemies dq numOfEnemies dup(enemy) ;Blue, yellow
 currentEnemy dw 0      ;0=blue, 1=yellow
@@ -231,7 +229,7 @@ initPlayerShot PROC
         jmp checkPlayerShots
     
     setPlayerShot:
-    mov ax, (playerHeight - playerShotHeight) / 2
+    mov ax, (playerHeight - shotHeight) / 2
     add ax, playerY
 
     mov playerShots.yArr[bx], ax ;Save y value
@@ -262,9 +260,9 @@ drawPlayerShot PROC
         mov dl, bgColor
         drawPlayerShotTrail:
         push cx
-        DRAW_VERTICAL playerShotHeight
+        DRAW_VERTICAL shotHeight
         sub di, windowWidth - 1
-        DRAW_VERTICAL playerShotHeight
+        DRAW_VERTICAL shotHeight
         sub di, windowWidth - 1
         pop cx
         inc bx ;Get next color
@@ -277,12 +275,12 @@ drawPlayerShot PROC
     mov dl, bgColor
 
     drawPlayerShotFront:
-    mov cx, playerShotHeight
+    mov cx, shotHeight
     drawPlayerShotRows:
         push cx
-        DRAW_HORIZONTAL playerShotWidth-6 ;6 is trails, mustn't space between operator
+        DRAW_HORIZONTAL shotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
-        add di, windowWidth - playerShotWidth + 7 ;Next row
+        add di, windowWidth - shotWidth + 7 ;Next row
         loop drawPlayerShotRows
 
     pop di dx cx bx
@@ -343,7 +341,7 @@ playerShotCollisions PROC
     
     ;Calculates pos of front to DI
     mov cx, playerShots.xArr[bx]
-    add cx, playerShotWidth      ;X pos
+    add cx, shotWidth      ;X pos
     mov dx, playerShots.yArr[bx] ;Y pos
     call getPosition
     
@@ -365,7 +363,7 @@ playerShotCollisions PROC
         jmp detectedPlayerShotCollision ;Collision detected
 
         checkPlayerShotCollisionNext:
-        add di, (playerShotHeight-1)*windowWidth
+        add di, (shotHeight-1)*windowWidth
         loop checkPlayerShotCollision
     jmp playerShotCollisionsEnd ;No collisions
     
@@ -1109,7 +1107,7 @@ initBlueEnemyShot PROC
         jmp checkBlueEnemyShots
     
     setBlueEnemyShot:
-    mov ax, (blueEnemyHeight - enemyShotHeight) / 2
+    mov ax, (blueEnemyHeight - shotHeight) / 2
     ;Move to CX
     xor cx, cx
     mov cl, allEnemies[0].y
@@ -1118,7 +1116,7 @@ initBlueEnemyShot PROC
     mov blueEnemyShots.yArr[si], ax ;Save y value
     ;Calc X since allEnemies[0].x isn't a const
     mov ax, allEnemies[0].x
-    sub ax, enemyShotWidth - 2 ;2 to shoot from body
+    sub ax, shotWidth - 2 ;2 to shoot from body
     mov blueEnemyShots.xArr[si], ax
     
     mov drawOrErase, 1
@@ -1146,15 +1144,15 @@ drawBlueEnemyShot PROC
     mov dl, bgColor
     
     drawBlueEnemyShotMain:
-    mov cx, enemyShotHeight
+    mov cx, shotHeight
     drawBlueEnemyShotRows:
         push cx
-        DRAW_HORIZONTAL enemyShotWidth-6 ;6 is trails, mustn't space between operator
+        DRAW_HORIZONTAL shotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
-        add di, windowWidth - enemyShotWidth + 7 ;Next row
+        add di, windowWidth - shotWidth + 7 ;Next row
         loop drawBlueEnemyShotRows
 
-    sub di, windowWidth*2 - enemyShotWidth + 6   ;Start of trails
+    sub di, windowWidth*2 - shotWidth + 6   ;Start of trails
 
     lea bx, blueEnemyShotTrailColors[0]
     mov cx, 3 ;Num of trail colors
@@ -1258,7 +1256,7 @@ blueEnemyShotCollisions PROC
         jmp detectedBlueEnemyShotCollision ;Collision detected
 
         checkBlueEnemyShotCollisionNext:
-        add di, (enemyShotHeight-1)*windowWidth
+        add di, (shotHeight-1)*windowWidth
         loop checkBlueEnemyShotCollision
     jmp blueEnemyShotCollisionsEnd ;No collisions
     
@@ -1295,7 +1293,7 @@ initYellowEnemyShot PROC
         jmp checkYellowEnemyShots
     
     setYellowEnemyShot:
-    mov ax, (yellowEnemyHeight - enemyShotHeight) / 2
+    mov ax, (yellowEnemyHeight - shotHeight) / 2
     ;Move to CX
     xor cx, cx
     mov cl, allEnemies[1].y
@@ -1304,7 +1302,7 @@ initYellowEnemyShot PROC
     mov yellowEnemyShots.yArr[si], ax ;Save y value
     ;Calc X since allEnemies[0].x isn't a const
     mov ax, allEnemies[1].x
-    sub ax, enemyShotWidth
+    sub ax, shotWidth
     mov yellowEnemyShots.xArr[si], ax
     
     mov drawOrErase, 1
@@ -1332,15 +1330,15 @@ drawYellowEnemyShot PROC
     mov dl, bgColor
     
     drawYellowEnemyShotMain:
-    mov cx, enemyShotHeight
+    mov cx, shotHeight
     drawYellowEnemyShotRows:
         push cx
-        DRAW_HORIZONTAL enemyShotWidth-6 ;6 is trails, mustn't space between operator
+        DRAW_HORIZONTAL shotWidth-6 ;6 is trails, mustn't space between operator
         pop cx
-        add di, windowWidth - enemyShotWidth + 7 ;Next row
+        add di, windowWidth - shotWidth + 7 ;Next row
         loop drawYellowEnemyShotRows
 
-    sub di, windowWidth*2 - enemyShotWidth + 6   ;Start of trails
+    sub di, windowWidth*2 - shotWidth + 6   ;Start of trails
 
     lea bx, yellowEnemyShotTrailColors[0]
     mov cx, 3 ;Num of trail colors
@@ -1444,7 +1442,7 @@ yellowEnemyShotCollisions PROC
         jmp detectedYellowEnemyShotCollision ;Collision detected
 
         checkYellowEnemyShotCollisionNext:
-        add di, (enemyShotHeight-1)*windowWidth
+        add di, (shotHeight-1)*windowWidth
         loop checkYellowEnemyShotCollision
     jmp yellowEnemyShotCollisionsEnd ;No collisions
     
