@@ -285,35 +285,30 @@ checkPlayerCollisions PROC
     ;Top part
     add di, 13
     call handlePlayerCollisions
-    cmp dh, 1
-    je checkPlayerCollisionsEnd ;Collision detected
+    jc checkPlayerCollisionsEnd ;Collision detected
     
     inc di
     call handlePlayerCollisions
-    cmp dh, 1
-    je checkPlayerCollisionsEnd ;Collision detected
-    
+    jc checkPlayerCollisionsEnd ;Collision detected
+
     ;Utilize the stairs-shaped wings of player
     mov cx, 3
     checkPlayerCollisionsLoop1:
         add di, windowWidth*2 + 2
         call handlePlayerCollisions
-        cmp dh, 1
-        je checkPlayerCollisionsEnd ;Collision detected
+        jc checkPlayerCollisionsEnd ;Collision detected
         loop checkPlayerCollisionsLoop1
     
     mov cx, 2
     checkPlayerCollisionsLoop2:
         add di, windowWidth*2 + 6
         call handlePlayerCollisions
-        cmp dh, 1
-        je checkPlayerCollisionsEnd ;Collision detected
+        jc checkPlayerCollisionsEnd ;Collision detected
         loop checkPlayerCollisionsLoop2
     
     dec di
     call handlePlayerCollisions
-    cmp dh, 1
-    je checkPlayerCollisionsEnd ;Collision detected
+    jc checkPlayerCollisionsEnd ;Collision detected
     
     ;Bottom part
     inc di
@@ -322,22 +317,18 @@ checkPlayerCollisions PROC
     checkPlayerCollisionsLoop3:
         add di, windowWidth*2 - 6
         call handlePlayerCollisions
-        cmp dh, 1
-        je checkPlayerCollisionsEnd ;Collision detected
+        jc checkPlayerCollisionsEnd ;Collision detected
         loop checkPlayerCollisionsLoop3
     
     mov cx, 3
     checkPlayerCollisionsLoop4:
         add di, windowWidth*2 - 2
         call handlePlayerCollisions
-        cmp dh, 1
-        je checkPlayerCollisionsEnd ;Collision detected
+        jc checkPlayerCollisionsEnd ;Collision detected
         loop checkPlayerCollisionsLoop4
     
     dec di
     call handlePlayerCollisions
-    cmp dh, 1
-    je checkPlayerCollisionsEnd ;Collision detected
     
     checkPlayerCollisionsEnd:
     pop di dx cx
@@ -345,10 +336,11 @@ checkPlayerCollisions PROC
 checkPlayerCollisions ENDP
 
 
-;Return boolean isCollided in DH
+;Return boolean isCollided in CF
+;Note: enemies shots collisions are handled in their own functions
 handlePlayerCollisions PROC
     ;DI is parameter = position to handle
-    xor dh, dh ;0 -> Assume not collided
+    clc ;Assume not collided
     
     ;Check for enemy collision
     cmp byte ptr es:[di], blueEnemyColor
@@ -359,13 +351,11 @@ handlePlayerCollisions PROC
     jmp handlePlayerCollisionsEnd
 
     ;Enemy collision:
-    ;Reset blue enemy
     playerCollisionBlueEnemy:
-        xor bx, bx ;BX = 0
+        xor bx, bx ;Enemy to kill
         jmp playerCollisionEnemy
     playerCollisionYellowEnemy:
         mov bx, 1
-        jmp playerCollisionEnemy
     
     playerCollisionEnemy:
         call killEnemy
@@ -373,6 +363,7 @@ handlePlayerCollisions PROC
         ;Restore player sprite
         mov drawOrErase, 1
         call drawPlayer
+        stc ;CF 1=collision
     
     handlePlayerCollisionsEnd:
     RET
