@@ -74,15 +74,15 @@ ENDM
 
 
 cls PROC
-    push cx di
+    push ax cx di
 
-    mov di, windowWidth*windowHeight
-    clsLoop:
-        dec di
-        mov byte ptr es:[di], bgColor
-        ja clsLoop
-    
-    pop di cx
+    cld        ;So stosb will inc di
+    mov cx, windowWidth*windowHeight
+    xor di, di ;Start from first pixel
+    mov ax, bgColor
+    rep stosb  ;mov es:[di], al && inc di, CX times
+
+    pop di cx ax
     RET
 cls ENDP
 
