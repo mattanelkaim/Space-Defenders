@@ -50,9 +50,7 @@ drawPlayer PROC
     ;ENGINE DARK GREYS
     mov di, bx ;Reset to anchor
     add di, 4*windowWidth + 5
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth
     mov es:[di], dl
     add di, windowWidth - 1
@@ -61,9 +59,7 @@ drawPlayer PROC
     add di, 8*windowWidth - 3
     DRAW_HORIZONTAL 4
     add di, windowWidth - 2
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     dec di
     mov es:[di], dl
     
@@ -113,17 +109,13 @@ drawPlayer PROC
     ;ENGINE RED
     mov di, bx ;Reset to anchor
     add di, 5*windowWidth + 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 2
     mov es:[di], dl
     
-    add di, 10*windowWidth
-    mov es:[di], dl
-    sub di, 2
-    mov es:[di], dl
-    dec di
+    add di, 10*windowWidth - 3
+    DRAW_HORIZONTAL 2
+    add di, 2
     mov es:[di], dl
     
     mov dl, 0Eh     ;Yellow
@@ -135,26 +127,18 @@ drawPlayer PROC
     ;ENGINE YELLOW
     mov di, bx ;Reset to anchor
     add di, 4*windowWidth + 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 2
     mov es:[di], dl
     add di, windowWidth + 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     
-    add di, 8*windowWidth
-    mov es:[di], dl
-    dec di
-    mov es:[di], dl
-    add di, windowWidth - 1
+    add di, 8*windowWidth - 1
+    DRAW_HORIZONTAL 2
+    add di, windowWidth - 2
     mov es:[di], dl
     add di, windowWidth + 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     
     mov dl, 36h     ;Blue
     cmp drawOrErase, 1
