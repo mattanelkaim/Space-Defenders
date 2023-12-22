@@ -167,33 +167,36 @@ handleGameInput ENDP
 
 initAllShots PROC
     ;Reset x & y values after welcome screen
-    lea bx, playerShots.xArr[0]
+    push ax cx di
+    ;Move temporarily DS to ES
+    mov ax, ds
+    mov es, ax
+
+    cld ;So that stosw will add 2 to DI
+    xor ax, ax
+
+    lea di, playerShots.xArr[0]
     mov cx, realMaxShots
-    resetPlayerShots:
-        mov word ptr [bx], 0
-        inc bx
-        loop resetPlayerShots
+    rep stosw
     
-    lea bx, blueEnemyShots.xArr[0]
+    lea di, blueEnemyShots.xArr[0]
     mov cx, realMaxShots
-    resetBlueEnemyShots:
-        mov word ptr [bx], 0
-        inc bx
-        loop resetBlueEnemyShots
+    rep stosw
     
-    lea bx, yellowEnemyShots.xArr[0]
+    lea di, yellowEnemyShots.xArr[0]
     mov cx, realMaxShots
-    resetYellowEnemyShots:
-        mov word ptr [bx], 0
-        inc bx
-        loop resetYellowEnemyShots
+    rep stosw
+
+    mov ax, 0A000h
+    mov es, ax ;Restore ES to video memory
+    pop di cx ax
     RET
 initAllShots ENDP
 
 
 initEnemy PROC
     ;Current enemy index in BX
-    push dx
+    push bx dx
     mov allEnemies[bx].x, windowWidth - blueEnemyWidth - 20  ;20 is offset
     ;y is random between 20-150
     push bx
@@ -201,11 +204,11 @@ initEnemy PROC
     mov bh, 150    ;Max
     call randomize ;To DX
     pop bx
-    mov allEnemies[bx].y, dl ;Must be <8 bits
+    mov allEnemies[bx].y, dl ;Must be 8 bits
     
-    ;Shoot faster on init (by 25%)
+    ;Shoot faster on init (by 75%)
     mov allEnemies[bx].shootCounter, enemyShootRate * 3 / 4
-    pop dx
+    pop dx bx
     RET
 initEnemy ENDP
 
@@ -234,7 +237,6 @@ drawBlueEnemy PROC
     call getPosition
     mov bx, di ;Save anchor point
     
-    
     mov dl, blueEnemyColor ;Lilac
     cmp drawOrErase, 1
     je drawBlueEnemyLightGrey
@@ -248,9 +250,7 @@ drawBlueEnemy PROC
     add di, 10
     DRAW_HORIZONTAL 4
     add di, windowWidth - 16
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 14
     DRAW_HORIZONTAL 3
     add di, windowWidth
@@ -258,9 +258,7 @@ drawBlueEnemy PROC
     add di, windowWidth
     mov es:[di], dl
     sub di, windowWidth + 17
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 1
     mov es:[di], dl
     dec di
@@ -270,9 +268,7 @@ drawBlueEnemy PROC
     inc di
     mov es:[di], dl
     add di, windowWidth
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth
     DRAW_HORIZONTAL 4
     add di, windowWidth - 2
@@ -280,17 +276,11 @@ drawBlueEnemy PROC
     sub di, windowWidth + 2
     DRAW_HORIZONTAL 4
     sub di, windowWidth
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     sub di, windowWidth
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     sub di, windowWidth
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     sub di, windowWidth
     mov es:[di], dl
     sub di, 6*windowWidth - 1
@@ -308,13 +298,9 @@ drawBlueEnemy PROC
     add di, windowWidth - 9
     DRAW_HORIZONTAL 11
     add di, windowWidth - 10
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 8
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 2
     DRAW_VERTICAL 9
     sub di, 8*windowWidth - 1
@@ -324,16 +310,12 @@ drawBlueEnemy PROC
     add di, windowWidth - 3
     DRAW_VERTICAL 3
     dec di
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     dec di
     mov es:[di], dl
-    sub di, 8
-    mov es:[di], dl
-    dec di
-    mov es:[di], dl
-    sub di, windowWidth
+    sub di, 9
+    DRAW_HORIZONTAL 2
+    sub di, windowWidth + 1
     mov es:[di], dl
     sub di, 2*windowWidth + 1
     DRAW_VERTICAL 3
@@ -357,7 +339,6 @@ drawBlueEnemy PROC
     mov es:[di], dl
     sub di, 2*windowWidth - 1
     DRAW_VERTICAL 4
-    
     
     mov dl, 36h     ;Blue
     cmp drawOrErase, 1
@@ -401,8 +382,7 @@ drawBlueEnemy PROC
     add di, windowWidth - 7
     DRAW_HORIZONTAL 7
     add di, windowWidth - 5
-    DRAW_HORIZONTAL 5
-    
+    DRAW_HORIZONTAL 5    
     
     mov dl, 0Fh     ;White
     cmp drawOrErase, 1
@@ -416,27 +396,18 @@ drawBlueEnemy PROC
     add di, windowWidth - 3
     DRAW_HORIZONTAL 5
     add di, windowWidth - 5
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 4
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 6
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, 4
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 5
     DRAW_HORIZONTAL 5
     add di, windowWidth - 3
     DRAW_HORIZONTAL 3
-    
-    
+        
     mov dl, 14h     ;Darker grey
     cmp drawOrErase, 1
     je drawBlueEnemyDarkerGrey
@@ -449,7 +420,6 @@ drawBlueEnemy PROC
     add di, windowWidth - 2
     DRAW_HORIZONTAL 3
     
-    
     mov dl, blueEnemyColor ;Lilac
     cmp drawOrErase, 1
     je drawBlueEnemyDarkPurple
@@ -460,14 +430,11 @@ drawBlueEnemy PROC
     add di, 15*windowWidth + 5
     mov es:[di], dl
     add di, 12
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 14
     DRAW_HORIZONTAL 15
     add di, windowWidth - 14
     DRAW_HORIZONTAL 15
-    
     
     mov dl, blueEnemyColor ;Lilac
     cmp drawOrErase, 1
@@ -477,33 +444,21 @@ drawBlueEnemy PROC
     drawBlueEnemyLightPurple:
     mov di, bx ;Reset to anchor
     add di, 16*windowWidth + 3
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     dec di
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     dec di
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     dec di
     mov es:[di], dl
     sub di, 2*windowWidth - 11
     DRAW_VERTICAL 3
     sub di, 3*windowWidth - 8
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     inc di
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     inc di
-    mov es:[di], dl
-    add di, windowWidth
-    mov es:[di], dl
+    DRAW_VERTICAL 2
     inc di
     mov es:[di], dl
     
@@ -540,9 +495,7 @@ drawYellowEnemy PROC
         pop cx
         loop yellowEnemyOuterLoop
     add di, windowWidth - 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 1
     mov es:[di], dl
     inc di
@@ -552,9 +505,7 @@ drawYellowEnemy PROC
     sub di, 2
     mov es:[di], dl
     add di, windowWidth - 1
-    mov es:[di], dl
-    inc di
-    mov es:[di], dl
+    DRAW_HORIZONTAL 2
     add di, windowWidth - 3
     DRAW_HORIZONTAL 4
     add di, windowWidth - 16
@@ -785,24 +736,21 @@ spawnEnemy PROC
     jne spawnEnemyEnd
     
     cmp allEnemies[bx].spawnCounter, enemySpawnRate
-    jge validToSpawnEnemy
-
-    ;Not valid to spawn enemy
-    inc allEnemies[bx].spawnCounter
-    jmp spawnEnemyEnd
+    jb spawnEnemyEnd
     
-    validToSpawnEnemy:
-        mov allEnemies[bx].spawnCounter, 0
-        call initEnemy
+    call initEnemy
+    mov allEnemies[bx].spawnCounter, 0
+    RET
          
     spawnEnemyEnd:
+    inc allEnemies[bx].spawnCounter
     RET
 spawnEnemy ENDP
 
 
 moveEnemy PROC
     cmp allEnemies[bx].moveCounter, enemyMoveRate
-    je validToMoveEnemy
+    jae validToMoveEnemy
     
     ;Not valid to spawn enemy
     inc allEnemies[bx].moveCounter
@@ -819,9 +767,9 @@ moveEnemy PROC
     
     sub allEnemies[bx].x, enemyVelocity
     
-    ;Has not reached border? (index)
-    cmp allEnemies[bx].x, borderWidth + 1
-    jge moveEnemyDraw
+    ;Has reached border?
+    cmp allEnemies[bx].x, borderWidth
+    jg moveEnemyDraw
     
     ;Reached border
     resetEnemy:
@@ -836,7 +784,6 @@ moveEnemy PROC
     moveEnemyDraw:
         mov drawOrErase, 1 ;Draw
         call drawCurrentEnemy
-        jmp moveEnemyEnd
     
     moveEnemyEnd:
     RET
@@ -851,10 +798,10 @@ killEnemy PROC
     call drawCurrentEnemy ;Erase
     mov allEnemies[bx].x, 0
     mov allEnemies[bx].y, 0
-    xor currentEnemy, 1 ;Switch 1 and 0
-
+    xor bx, 1             ;Toggle 1 and 0
+    mov currentEnemy, bx
+    
     ;Reset their spawn counter & fix bug
-    mov bx, currentEnemy
     mov allEnemies[bx].spawnCounter, 0
     pop bx
     RET
@@ -871,7 +818,7 @@ fireEnemyShot PROC
 
     ;Not valid to shoot
     inc allEnemies[bx].shootCounter
-    jmp fireEnemyShotEnd
+    RET
 
     validToShoot:
         mov allEnemies[bx].shootCounter, 0
@@ -903,13 +850,12 @@ initBlueEnemyShot PROC
     ;Determine which shot to work on
     xor si, si ;0 = Current shot
     mov ax, blueEnemyShots.max
-    dec ax ;Can't do in 1 line
     checkBlueEnemyShots:
-        cmp si, ax ;No shots available
-        ja initBlueEnemyShotEnd
+        cmp si, ax
+        jae initBlueEnemyShotEnd ;No shots available
         
         cmp blueEnemyShots.xArr[si], 0
-        je setBlueEnemyShot ;Shot NOT initialized
+        je setBlueEnemyShot      ;Shot NOT initialized
         
         add si, 2
         jmp checkBlueEnemyShots
@@ -1089,10 +1035,9 @@ initYellowEnemyShot PROC
     ;Determine which shot to work on
     xor si, si ;0 = Current shot
     mov ax, yellowEnemyShots.max
-    dec ax ;Can't do in 1 line
     checkYellowEnemyShots:
-        cmp si, ax ;No shots available
-        ja initYellowEnemyShotEnd
+        cmp si, ax
+        jae initYellowEnemyShotEnd ;No shots available
         
         cmp yellowEnemyShots.xArr[si], 0
         je setYellowEnemyShot ;Shot NOT initialized
