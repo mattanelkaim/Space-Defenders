@@ -52,6 +52,7 @@ enemyShootRate equ 300 ;300f/120fps = 2.5secs
 numOfEnemies equ 2
 allEnemies dq numOfEnemies dup(enemy) ;Blue, yellow
 currentEnemy dw 0      ;0=blue, 1=yellow
+enemyScores db 3, 5    ;Blue & yellow
 
 ;Blue enemy variables
 blueEnemyWidth equ 23
@@ -82,10 +83,9 @@ initializeGame PROC
     call drawStars
     call drawPlayerHP
     call drawCoin
-    call drawScore
-    xor bx, bx ;BX = 0
+    call updateScore
+    ;Kill both enemies
     call killEnemy
-    inc bx     ;BX = 1
     call killEnemy
     
     mov drawOrErase, 1
@@ -147,7 +147,7 @@ handleGameInput PROC
     ;DEV CHEATS
     devCheat1:
         inc playerScore
-        call drawScore
+        call updateScore
         jmp handleGameInputEnd
     devCheat2:
         call decPlayerHP
@@ -215,12 +215,11 @@ initPlayerShot PROC
     ;Determine which shot to work on
     xor bx, bx ;Holds current shot
     
+    mov ax, playerShots.max
+    shl ax, 1 ;Multiple by 2 cuz referencing a dw array
     checkPlayerShots:
-        mov ax, playerShots.max
-        shl ax, 1 ;Multiple by 2 cuz referencing a dw array
-        dec ax ;Can't do in 1 line
         cmp bx, ax ;No shots available
-        ja initPlayerShotEnd
+        jae initPlayerShotEnd
         
         cmp playerShots.xArr[bx], 0
         je setPlayerShot ;Shot NOT initialized
@@ -229,11 +228,14 @@ initPlayerShot PROC
         jmp checkPlayerShots
     
     setPlayerShot:
+    mov playerShots.xArr[bx], playerWidth + playerX ;Front of player (index)
+    
+    push ax
     mov ax, (playerHeight - shotHeight) / 2
     add ax, playerY
-
     mov playerShots.yArr[bx], ax ;Save y value
-    mov playerShots.xArr[bx], playerWidth + playerX ;Front of player (index)
+    pop ax
+
     mov drawOrErase, 1
     call drawPlayerShot ;Draw
     
@@ -290,22 +292,16 @@ drawPlayerShot ENDP
 
 movePlayerShots PROC
     ;Go through all the shots
-    mov bx, -2 ;So we can start at 0 in loop
+    
+    mov ax, playerShots.max
+    shl ax, 1  ;Multiple by 2 cuz referencing a dw array
+    mov bx, -2 ;So loop can be started at 0
     handlePlayerShots:
         add bx, 2
-        mov ax, playerShots.max
-        shl ax, 1 ;Multiple by 2 cuz referencing a dw array
-        dec ax ;Can't do in 1 line
-        
         cmp bx, ax
-        ja movePlayerShotsEnd ;No shots are available
-        
+        jae movePlayerShotsEnd ;No shots are available
         cmp playerShots.xArr[bx], 0
-        jne moveCurrentPlayerShot ;Shot initialized
-        
-        jmp handlePlayerShots ;Shot NOT initialized
-    
-    jmp movePlayerShotsEnd ;Handled all shots
+        je handlePlayerShots   ;Shot NOT initialized
     
     moveCurrentPlayerShot:
         ;Remove prev shot
@@ -314,8 +310,7 @@ movePlayerShots PROC
         
         ;Check collisions
         call playerShotCollisions
-        cmp dh, 0 ;Return is boolean
-        je movePlayerShotsDraw ;No collision detected
+        jnc movePlayerShotsDraw ;No collision detected
         
         ;DH is 1, collosion detected: reset shot
         mov playerShots.xArr[bx], 0
@@ -335,68 +330,51 @@ movePlayerShots ENDP
 ;Param BX holds current shot index
 ;Return in DH, 1 if collision else 0
 playerShotCollisions PROC
-    push bx cx
-    ;Assume no collision
-    xor dh, dh
+    push bx cx dx di
+    clc ;Assume not collided
     
     ;Calculates pos of front to DI
     mov cx, playerShots.xArr[bx]
-    add cx, shotWidth      ;X pos
-    mov dx, playerShots.yArr[bx] ;Y pos
-    call getPosition
-    
+    add cx, shotWidth            ;X pos
     ;Is in border?
     cmp cx, windowWidth - borderWidth
     je detectedPlayerShotCollision
+
+    mov dx, playerShots.yArr[bx] ;Y pos
+    call getPosition
     
-    ;Check top, then bottom
-    mov cx, 2
+    ;Check top to bottom
+    mov cx, shotHeight
     checkPlayerShotCollision:
         cmp byte ptr es:[di], bgColor
         je checkPlayerShotCollisionNext
         cmp byte ptr es:[di], starsColor
         je checkPlayerShotCollisionNext
         cmp byte ptr es:[di], blueEnemyColor
-        je playerShotCollisionBlueEnemy
+        je playerShotCollisionEnemy
         cmp byte ptr es:[di], yellowEnemyColor
-        je playerShotCollisionYellowEnemy
-        jmp detectedPlayerShotCollision ;Collision detected
+        je playerShotCollisionEnemy
+        jmp detectedPlayerShotCollision ;Other collission detected
 
         checkPlayerShotCollisionNext:
-        add di, (shotHeight-1)*windowWidth
+        add di, windowWidth
         loop checkPlayerShotCollision
     jmp playerShotCollisionsEnd ;No collisions
-    
-    playerShotCollisionBlueEnemy:
-        xor bx, bx
-        jmp playerShotCollisionEnemy
-    playerShotCollisionYellowEnemy:
-        mov bx, 1
-        jmp playerShotCollisionEnemy
     
     playerShotCollisionEnemy:
     call killEnemy
 
     ;Update score
-    cmp currentEnemy, 1
-    je killedBlue
-
-    ;Each enemy gives different score
-    add playerScore, 5
-    jmp updateScore
-    killedBlue:
-        add playerScore, 3
-    updateScore:
-        call drawScore
-        mov drawOrErase, 0
-        call drawPlayerShot
+    xor cx, cx
+    mov cl, enemyScores[bx]
+    add playerScore, cx
+    call updateScore
     
     detectedPlayerShotCollision:
-        mov dh, 1  ;Collision true
+        stc ;Collision true
     
     playerShotCollisionsEnd:
-    ;No collision - DH is already 0
-    pop cx bx
+    pop di dx cx bx
     RET
 playerShotCollisions ENDP
 
@@ -1039,6 +1017,7 @@ moveEnemy ENDP
 
 killEnemy PROC
     ;Enemy to kill in BX
+    push bx
     mov bx, currentEnemy
     mov drawOrErase, 0
     call drawCurrentEnemy ;Erase
@@ -1049,6 +1028,7 @@ killEnemy PROC
     ;Reset their spawn counter & fix bug
     mov bx, currentEnemy
     mov allEnemies[bx].spawnCounter, 0
+    pop bx
     RET
 killEnemy ENDP
 
