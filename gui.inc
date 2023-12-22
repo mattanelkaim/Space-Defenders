@@ -137,21 +137,21 @@ decPlayerHP ENDP
 
 ;#################### SCORE ####################
 
-drawScore PROC
+updateScore PROC
     push ax bx cx dx di
     cmp playerScore, maxScore
     jbe drawValidScore
     
     ;Set to max valid score
     mov playerScore, maxScore
-    jmp drawScoreEnd
+    jmp updateScoreEnd
 
     drawValidScore:
     call deleteScore  ;Delete last score
     GET_POWER_OF_10 playerScore ;To CX
     mov di, 794    ;Position of score
     mov bl, 10     ;Const of divisor
-    drawScoreLoop:
+    updateScoreLoop:
         xor dx, dx ;Div by word, DX should be 0
         div cx     ;AX = quotient, DX = remainder
         
@@ -166,12 +166,12 @@ drawScore PROC
         
         mov ax, dx ;Save remainder for next iteration
         cmp cx, 0  ;Check divisor
-        jne drawScoreLoop
+        jne updateScoreLoop
     
-    drawScoreEnd:
+    updateScoreEnd:
     pop di dx cx bx ax
     RET
-drawScore ENDP
+updateScore ENDP
 
 
 deleteScore PROC
@@ -300,7 +300,7 @@ buyShots PROC
 
     ;Buy new shot
     sub playerScore, ax
-    call drawScore
+    call updateScore
     inc playerShots.max
     
     buyShotsEnd:
