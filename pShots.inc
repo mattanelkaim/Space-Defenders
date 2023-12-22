@@ -153,6 +153,7 @@ playerShotCollisions PROC
     jmp playerShotCollisionsEnd ;No collisions
     
     playerShotCollisionEnemy:
+    mov bx, currentEnemy ;Save enemy for points
     call killEnemy
 
     ;Update score
