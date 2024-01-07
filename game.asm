@@ -29,11 +29,11 @@ enemy STRUC
     shootCounter dw 0
 enemy ENDS
 
-realMaxShots equ 5
+limitMaxShots equ 5
 
 shots STRUC
-    xArr dw realMaxShots dup(0)
-    yArr dw realMaxShots dup(0)
+    xArr dw limitMaxShots dup(0)
+    yArr dw limitMaxShots dup(0)
     max dw ?        ;Actual current max = max/2, shots are dw arrays
     trailColors db 3 dup(?)
 shots ENDS
@@ -176,15 +176,15 @@ initAllShots PROC
     xor ax, ax
 
     lea di, playerShots.xArr[0]
-    mov cx, realMaxShots
+    mov cx, limitMaxShots
     rep stosw
     
     lea di, blueEnemyShots.xArr[0]
-    mov cx, realMaxShots
+    mov cx, limitMaxShots
     rep stosw
     
     lea di, yellowEnemyShots.xArr[0]
-    mov cx, realMaxShots
+    mov cx, limitMaxShots
     rep stosw
 
     mov ax, 0A000h

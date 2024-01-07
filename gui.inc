@@ -271,10 +271,10 @@ buyShots PROC
     mov bx, playerShots.max
     
     ;Can extend max shots?
-    cmp bx, realMaxShots
+    cmp bx, limitMaxShots
     jge buyShotsEnd
 
-    ;Move to AX
+    ;Move price to AX
     xor ax, ax
     mov al, shotPrices[bx - 1] ;1 is initial real max
     cmp playerScore, ax
