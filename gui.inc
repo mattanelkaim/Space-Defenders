@@ -138,7 +138,6 @@ decPlayerHP ENDP
 ;#################### SCORE ####################
 
 updateScore PROC
-    push ax bx cx dx di
     cmp playerScore, maxScore
     jbe drawValidScore
     
@@ -148,28 +147,10 @@ updateScore PROC
 
     drawValidScore:
     call deleteScore  ;Delete last score
-    GET_POWER_OF_10 playerScore ;To CX
-    mov di, 794    ;Position of score
-    mov bl, 10     ;Const of divisor
-    updateScoreLoop:
-        xor dx, dx ;Div by word, DX should be 0
-        div cx     ;AX = quotient, DX = remainder
-        
-        DRAW_DIGIT al
-        add di, 7
-        
-        ;Divisor CX /= 10
-        mov ax, cx
-        div bl     ;10
-        xor ch, ch
-        mov cl, al ;Update CX
-        
-        mov ax, dx ;Save remainder for next iteration
-        cmp cx, 0  ;Check divisor
-        jne updateScoreLoop
+    ;Draw playerScore at pos 794
+    DRAW_NUMBER playerScore, 794
     
     updateScoreEnd:
-    pop di dx cx bx ax
     RET
 updateScore ENDP
 
