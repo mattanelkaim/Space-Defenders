@@ -8,8 +8,8 @@ maxScore equ 9999
 
 ;#################### LOGIC ####################
 
+;Number is in AX, return in CX
 calcPowerOf10 PROC
-    ;Number is in AX, return in CX
     mov cx, 1
     cmp ax, 10
     jb getPowerOf10End
@@ -29,18 +29,20 @@ calcPowerOf10 PROC
 calcPowerOf10 ENDP
 
 GET_POWER_OF_10 MACRO num:REQ
+    push ax
     mov ax, num
     call calcPowerOf10
+    pop ax
 ENDM
 
 
 ;#################### HANDLE DIGIT ####################
 
+;Digit is in BX
 drawDigit PROC
-    ;Digit to draw in BX
-    push cx dx di ;CX DI are used in digits-drawing functions
+    push cx dx di ;CX & DI are used in digits-drawing functions
+
     mov dl, 2Ch   ;Yellow
-    
     shl bx, 1     ;Procs table is defined in words (2 bytes)
     call [digitsProcsTable + bx]
 
@@ -55,6 +57,45 @@ DRAW_DIGIT MACRO digit:REQ
     mov bl, digit
     call drawDigit
     pop bx
+ENDM
+
+
+;#################### DRAW NUMBER ####################
+
+;Number is in AX
+;Position is in DI
+drawNumber PROC
+    push ax bx cx dx di
+
+    GET_POWER_OF_10 ax ;To CX
+    mov bl, 10     ;Const of divisor
+    drawNumberLoop:
+        xor dx, dx ;Div by word, DX should be 0
+        div cx     ;AX = quotient, DX = remainder
+        
+        DRAW_DIGIT al
+        add di, 7
+        
+        ;Divisor CX /= 10
+        mov ax, cx
+        div bl     ;10
+        xor ch, ch
+        mov cl, al ;Update CX
+        
+        mov ax, dx ;Save remainder for next iteration
+        cmp cx, 0  ;Check divisor
+        jne drawNumberLoop
+    
+    pop di dx cx bx ax
+    RET
+drawNumber ENDP
+
+DRAW_NUMBER MACRO num:REQ, pos:REQ
+    push ax di
+    mov ax, num
+    mov di, pos
+    call drawNumber
+    pop di ax
 ENDM
 
 
