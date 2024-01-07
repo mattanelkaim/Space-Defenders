@@ -99,26 +99,8 @@ drawPlayer PROC
     mov di, bx      ;Reset to anchor
     add di, 9*windowWidth + 20
     DRAW_VERTICAL 3 ;Height of line
-    
-    mov dl, 0Ch ;Red
-    cmp drawOrErase, 1
-    je drawPlayerRed
-    mov dl, bgColor ;Erase
-    
-    drawPlayerRed:
-    ;ENGINE RED
-    mov di, bx ;Reset to anchor
-    add di, 5*windowWidth + 1
-    DRAW_HORIZONTAL 2
-    add di, 2
-    mov es:[di], dl
-    
-    add di, 10*windowWidth - 3
-    DRAW_HORIZONTAL 2
-    add di, 2
-    mov es:[di], dl
-    
-    mov dl, 0Eh     ;Yellow
+        
+    mov dl, 2Ch     ;Yellow
     cmp drawOrErase, 1
     je drawPlayerYellow
     mov dl, bgColor ;Erase
@@ -126,7 +108,20 @@ drawPlayer PROC
     drawPlayerYellow:
     ;ENGINE YELLOW
     mov di, bx ;Reset to anchor
-    add di, 4*windowWidth + 1
+    add di, 5*windowWidth
+    DRAW_HORIZONTAL 3
+    add di, 10*windowWidth - 2
+    DRAW_HORIZONTAL 3
+    
+    mov dl, 2Ah ;Orange
+    cmp drawOrErase, 1
+    je drawPlayerOrange
+    mov dl, bgColor ;Erase
+    
+    drawPlayerOrange:
+    ;FLAMES ORANGE
+    mov di, bx
+    add di, 4*windowWidth
     DRAW_HORIZONTAL 2
     add di, windowWidth - 2
     mov es:[di], dl
@@ -139,6 +134,52 @@ drawPlayer PROC
     mov es:[di], dl
     add di, windowWidth + 1
     DRAW_HORIZONTAL 2
+
+    mov dl, 29h ;Red
+    cmp drawOrErase, 1
+    je drawPlayerRed
+    mov dl, bgColor ;Erase
+    
+    drawPlayerRed:
+    ;ENGINE RED
+    mov di, bx ;Reset to anchor
+    add di, 3*windowWidth - 1
+    DRAW_HORIZONTAL 3
+    add di, windowWidth + 1
+    mov es:[di], dl
+    sub di, 3
+    mov es:[di], dl
+    dec di
+    DRAW_VERTICAL 3
+    inc di
+    mov es:[di], dl
+    add di, windowWidth
+    DRAW_HORIZONTAL 3
+    sub di, 2*windowWidth + 4
+    mov es:[di], dl
+    add di, 7
+    mov es:[di], dl
+    add di, windowWidth - 2
+    mov es:[di], dl
+    
+    add di, 7*windowWidth - 3
+    DRAW_HORIZONTAL 3
+    add di, windowWidth + 1
+    mov es:[di], dl
+    sub di, 3
+    mov es:[di], dl
+    dec di
+    DRAW_VERTICAL 3
+    inc di
+    mov es:[di], dl
+    add di, windowWidth
+    DRAW_HORIZONTAL 3
+    sub di, 2*windowWidth + 4
+    mov es:[di], dl
+    add di, 7
+    mov es:[di], dl
+    add di, windowWidth - 2
+    mov es:[di], dl
     
     mov dl, 36h     ;Blue
     cmp drawOrErase, 1
