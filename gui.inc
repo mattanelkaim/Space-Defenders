@@ -240,29 +240,58 @@ initShop PROC
     mov di, windowWidth*189 + 81
     DRAW_HORIZONTAL 159
 
-    mov dx, playerShots.max
-    inc dx
-    DRAW_NUMBER dx, windowWidth*191+144, 0Fh
-
-    mov playerShots.xArr[0], 152
-    mov playerShots.yArr[0], 194
+    mov playerShots.xArr[0], 147
+    mov playerShots.yArr[0], 193
     xor bx, bx ;Draw first shot
     call drawPlayerShot
+
+    mov di, windowWidth*191+161
+    mov dl, 0Fh
+    call drawEquals
+
+    call updateShotPrice
 
     RET
 initShop ENDP
 
 
-drawPlus PROC
-    push cx dx di
-    mov dl, 2
-    add di, 3
-    DRAW_VERTICAL 7
-    sub di, windowWidth*3 + 3
-    DRAW_HORIZONTAL 7
-    pop di dx cx
+updateShotPrice PROC
+    push ax bx
+
+    mov bx, playerShots.max
+    cmp bx, limitMaxShots
+    jl validNextMax
+    DRAW_NUMBER bx, windowWidth*191+140, 18h
+    mov dl, 18h
+    mov di, windowWidth*191+161
+    call drawEquals
+    jmp updatePrice
+
+    validNextMax:
+    DRAW_NUMBER bx, windowWidth*191+140, bgColor
+    inc bx
+    DRAW_NUMBER bx, windowWidth*191+140, 0Fh
+    dec bx ;Restore from prior commands, get original
+
+    updatePrice:
+    ;Move price to AX
+    xor ax, ax
+    mov al, shotPrices[bx - 2] ;1 is initial real max
+
+    cmp bx, limitMaxShots
+    jl validNextPrice
+    DRAW_NUMBER ax, windowWidth*191+169, 74h
+    jmp updateShotPriceEnd
+
+    validNextPrice:
+    DRAW_NUMBER ax, windowWidth*191+169, bgColor
+    mov al, shotPrices[bx - 1] ;1 is initial real max
+    DRAW_NUMBER ax, windowWidth*191+169, SCORE_COLOR ;44h is decayed
+
+    updateShotPriceEnd:
+    pop bx ax
     RET
-drawPlus ENDP
+updateShotPrice ENDP
 
 
 buyShots PROC
@@ -285,6 +314,8 @@ buyShots PROC
     call updateScore
     inc playerShots.max
     
+    call updateShotPrice
+
     buyShotsEnd:
     pop bx ax
     RET

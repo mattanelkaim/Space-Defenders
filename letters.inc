@@ -230,4 +230,12 @@ drawV PROC
     RET
 drawV ENDP
 
+drawEquals PROC
+    add di, 2*windowWidth
+    DRAW_HORIZONTAL 5
+    add di, 2*windowWidth - 4
+    DRAW_HORIZONTAL 5
+    RET
+drawEquals ENDP
+
 endif
