@@ -100,7 +100,7 @@ drawPlayer PROC
     add di, 9*windowWidth + 20
     DRAW_VERTICAL 3 ;Height of line
         
-    mov dl, 2Ch     ;Yellow
+    mov dl, 2Bh     ;Yellow
     cmp drawOrErase, 1
     je drawPlayerYellow
     mov dl, bgColor ;Erase
@@ -113,7 +113,7 @@ drawPlayer PROC
     add di, 10*windowWidth - 2
     DRAW_HORIZONTAL 3
     
-    mov dl, 2Ah ;Orange
+    mov dl, 29h ;Orange
     cmp drawOrErase, 1
     je drawPlayerOrange
     mov dl, bgColor ;Erase
@@ -135,7 +135,7 @@ drawPlayer PROC
     add di, windowWidth + 1
     DRAW_HORIZONTAL 2
 
-    mov dl, 29h ;Red
+    mov dl, 4h ;Red
     cmp drawOrErase, 1
     je drawPlayerRed
     mov dl, bgColor ;Erase
