@@ -12,7 +12,7 @@ playerScore dw 0 ;Max 9999
 
 ;Shop variables
 shotPrices db 10, 15, 20, 25
-
+SCORE_COLOR equ 2Ch
 
 ;#################### HP ####################
 
@@ -148,7 +148,7 @@ updateScore PROC
     drawValidScore:
     call deleteScore  ;Delete last score
     ;Draw playerScore at pos 794
-    DRAW_NUMBER playerScore, 794
+    DRAW_NUMBER playerScore, 794, SCORE_COLOR
     
     updateScoreEnd:
     RET
@@ -240,10 +240,11 @@ initShop PROC
     mov di, windowWidth*189 + 81
     DRAW_HORIZONTAL 159
 
-    mov di, windowWidth*191 + 120
-    call drawPlus
+    mov dx, playerShots.max
+    inc dx
+    DRAW_NUMBER dx, windowWidth*191+144, 0Fh
 
-    mov playerShots.xArr[0], 130
+    mov playerShots.xArr[0], 152
     mov playerShots.yArr[0], 194
     xor bx, bx ;Draw first shot
     call drawPlayerShot

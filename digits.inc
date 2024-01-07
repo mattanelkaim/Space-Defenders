@@ -4,6 +4,7 @@ include draw.inc
 
 digitsProcsTable dw draw0, draw1, draw2, draw3, draw4, draw5, draw6, draw7, draw8, draw9
 maxScore equ 9999
+digitColor db ? ;Parameter
 
 
 ;#################### LOGIC ####################
@@ -39,24 +40,25 @@ ENDM
 ;#################### HANDLE DIGIT ####################
 
 ;Digit is in BX
+;Color is in DL
 drawDigit PROC
-    push cx dx di ;CX & DI are used in digits-drawing functions
-
-    mov dl, 2Ch   ;Yellow
+    push cx di ;CX & DI are used in digits-drawing functions
+    
     shl bx, 1     ;Procs table is defined in words (2 bytes)
     call [digitsProcsTable + bx]
-
-    pop di dx cx
+    
+    pop di cx
     RET
 drawDigit ENDP
 
 DRAW_DIGIT MACRO digit:REQ
-    push bx
+    push bx dx
     ;Move digit to BL
-    xor bx, bx
+    xor bh, bh
     mov bl, digit
+    mov dl, digitColor
     call drawDigit
-    pop bx
+    pop dx bx
 ENDM
 
 
@@ -64,6 +66,7 @@ ENDM
 
 ;Number is in AX
 ;Position is in DI
+;Color is in BH
 drawNumber PROC
     push ax bx cx dx di
 
@@ -73,7 +76,7 @@ drawNumber PROC
         xor dx, dx ;Div by word, DX should be 0
         div cx     ;AX = quotient, DX = remainder
         
-        DRAW_DIGIT al
+        DRAW_DIGIT al,digitColor
         add di, 7
         
         ;Divisor CX /= 10
@@ -90,12 +93,13 @@ drawNumber PROC
     RET
 drawNumber ENDP
 
-DRAW_NUMBER MACRO num:REQ, pos:REQ
-    push ax di
+DRAW_NUMBER MACRO num:REQ, pos:REQ, color:REQ
+    push ax bx di
     mov ax, num
     mov di, pos
+    mov digitColor, color
     call drawNumber
-    pop di ax
+    pop di bx ax
 ENDM
 
 
