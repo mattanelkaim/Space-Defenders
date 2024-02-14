@@ -42,8 +42,7 @@ shotHeight equ 2 ;DO NOT CHANGE!
 
 ;Player shots variables
 playerShots shots {max=1} ;Upgradable
-playerShotFrontColor equ 34h
-playerShotTrailColors db 20h, 37h, 36h
+playerShotTrailColors db 20h, 37h, 36h, 34h
 
 ;Global enemy variables
 enemyVelocity equ 2
@@ -60,16 +59,14 @@ blueEnemyWidth equ 23
 blueEnemyHeight equ 20
 blueEnemyColor equ 3Ah
 blueEnemyShots shots {max=4}
-blueEnemyShotFrontColor equ 24h ;Can join to 1 array
-blueEnemyShotTrailColors db 5, 6Ch, 0B3h
+blueEnemyShotTrailColors db 24h, 5, 6Ch, 0B3h
 
 ;Yellow enemy variables
 yellowEnemyWidth equ 21
 yellowEnemyHeight equ 23
 yellowEnemyColor equ 9
 yellowEnemyShots shots {max=4}
-yellowEnemyShotFrontColor equ 2Ch ;Can join to 1 array
-yellowEnemyShotTrailColors db 2Bh, 2Ah, 29h
+yellowEnemyShotTrailColors db 2Ch, 2Bh, 2Ah, 29h
 
 CODESEG
 
@@ -892,7 +889,8 @@ drawBlueEnemyShot PROC
     call getPosition
 
     ;Draw main part of shot
-    mov dl, blueEnemyShotFrontColor
+    lea bx, blueEnemyShotTrailColors[0]
+    mov dl, [bx]
     cmp drawOrErase, 0
     jne drawBlueEnemyShotMain
     mov dl, bgColor
@@ -907,8 +905,8 @@ drawBlueEnemyShot PROC
         loop drawBlueEnemyShotRows
 
     sub di, windowWidth*2 - shotWidth + 6   ;Start of trails
+    inc bx
 
-    lea bx, blueEnemyShotTrailColors[0]
     mov cx, 3 ;Num of trail colors
     blueEnemyShotsTrails:
         mov dl, [bx]
@@ -999,7 +997,10 @@ blueEnemyShotCollisions PROC
         je checkBlueEnemyShotCollisionNext
         cmp byte ptr es:[di], starsColor
         je checkBlueEnemyShotCollisionNext
-        cmp byte ptr es:[di], playerShotFrontColor
+        push ax
+        mov al, playerShotTrailColors[3] ;Index 3 = player shot's front
+        cmp byte ptr es:[di], al
+        pop ax
         je checkBlueEnemyShotCollisionNext
         mov dl, playerColors[0]
         cmp es:[di], dl
@@ -1077,7 +1078,8 @@ drawYellowEnemyShot PROC
     call getPosition
 
     ;Draw main part of shot
-    mov dl, yellowEnemyShotFrontColor
+    lea bx, yellowEnemyShotTrailColors[0]
+    mov dl, [bx]
     cmp drawOrErase, 0
     jne drawYellowEnemyShotMain
     mov dl, bgColor
@@ -1092,8 +1094,8 @@ drawYellowEnemyShot PROC
         loop drawYellowEnemyShotRows
 
     sub di, windowWidth*2 - shotWidth + 6   ;Start of trails
+    inc bx
 
-    lea bx, yellowEnemyShotTrailColors[0]
     mov cx, 3 ;Num of trail colors
     yellowEnemyShotsTrails:
         mov dl, [bx]
@@ -1184,7 +1186,10 @@ yellowEnemyShotCollisions PROC
         je checkYellowEnemyShotCollisionNext
         cmp byte ptr es:[di], starsColor
         je checkYellowEnemyShotCollisionNext
-        cmp byte ptr es:[di], playerShotFrontColor
+        push ax
+        mov al, playerShotTrailColors[3] ;Index 3 = player shot's front
+        cmp byte ptr es:[di], al
+        pop ax
         je checkYellowEnemyShotCollisionNext
         mov dl, playerColors[0]
         cmp es:[di], dl

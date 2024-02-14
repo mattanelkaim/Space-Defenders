@@ -63,7 +63,7 @@ drawPlayerShot PROC
         loop playerShotsTrails
 
     ;Draw front part of shot
-    mov dl, playerShotFrontColor
+    mov dl, [bx] ;Index 3 = player shot's front
     cmp drawOrErase, 0
     jne drawPlayerShotFront
     mov dl, bgColor

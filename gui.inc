@@ -261,7 +261,9 @@ updateShotPrice PROC
     mov bx, playerShots.max
     cmp bx, limitMaxShots
     jl validNextMax
+    ;Fade out equals and shot
     DRAW_NUMBER bx, windowWidth*191+140, 18h
+    call fadeShotInShop
     mov dl, 18h
     mov di, windowWidth*191+161
     call drawEquals
@@ -292,6 +294,42 @@ updateShotPrice PROC
     pop bx ax
     RET
 updateShotPrice ENDP
+
+
+fadeShotInShop PROC
+    push ax bx cx
+
+    ;Fade colors
+    mov bx, 3
+    fadePlayerShots:
+        add playerShotTrailColors[bx], 90h ;Offset in VGA table to fade colors
+        dec bx
+        jns fadePlayerShots ;As long as index positive/zero
+
+    ;Backup position
+    mov ax, playerShots.xArr[0]
+    mov cx, playerShots.yArr[0]
+
+    ;Draw shot
+    mov playerShots.xArr[0], 147
+    mov playerShots.yArr[0], 193
+    xor bx, bx ;Draw first shot
+    call drawPlayerShot
+
+    ;Restore position
+    mov playerShots.xArr[0], ax
+    mov playerShots.yArr[0], cx
+
+    ;Fade colors
+    mov bx, 3
+    unfadePlayerShots:
+        sub playerShotTrailColors[bx], 90h ;Offset in VGA table to fade colors
+        dec bx
+        jns unfadePlayerShots ;As long as index positive/zero
+
+    pop cx bx ax
+    RET
+fadeShotInShop ENDP
 
 
 buyShots PROC
